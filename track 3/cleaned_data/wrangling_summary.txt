@@ -1,0 +1,88 @@
+============================================================
+ OSHA Data Wrangling Summary
+============================================================
+Raw records:               104,548
+Construction (NAICS 23*):   18,779
+Vehicle/equipment incidents:   4,287
+
+── Machine Type Distribution ──
+machine_type
+Truck             1606
+Forklift           575
+Crane              558
+Excavator          455
+Loader             339
+Aerial Lift        224
+Dump Truck         145
+Roller             124
+Backhoe            111
+Bulldozer           54
+Paver               27
+Concrete Mixer      21
+Concrete Pump       19
+Grader              15
+Trencher             8
+Pile Driver          6
+
+── Hazard Type Distribution ──
+hazard_type
+Struck-by        1729
+Fall              997
+Caught-in         705
+Other             198
+Electrocution     168
+Tip-over          149
+Contact-with       93
+Pinch-Point        86
+Collision          68
+Burns              42
+Run-over           31
+Back-over          21
+
+── Task Type Distribution ──
+task_type
+General Construction    2430
+Loading/Unloading       1182
+Operating                377
+Setup/Positioning         90
+Excavation                89
+Maintenance               82
+Mounting/Dismounting      23
+Idling/Parked             13
+Demolition                 1
+
+── Time of Day Distribution ──
+time_of_day
+Unknown      4259
+Evening         9
+Morning         7
+Night           6
+Afternoon       6
+
+── Weather Condition Distribution ──
+weather_condition
+Clear/Unknown    4118
+Snow/Ice           46
+Heat               34
+Muddy              31
+Wind               27
+Rain               25
+Wet Surface         6
+
+── Severity Score Stats ──
+count    4287.000000
+mean        1.429671
+std         0.914005
+min         1.000000
+25%         1.000000
+50%         1.000000
+75%         1.000000
+max         5.000000
+
+Date range: 1/10/2016 to 9/9/2025
+States represented: 49
+
+Files produced:
+  • cleaned_data/osha_construction_vehicles_cleaned.csv
+  • cleaned_data/hazard_frequency.csv
+  • cleaned_data/hazard_frequency_by_machine.csv
