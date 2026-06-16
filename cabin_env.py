@@ -9,7 +9,7 @@ This is the canonical Pipeline-B simulator. It wires together all three devs:
     Tier-1 hard-rule engine that owns Level 3.
   • Dev 2 (rewards/reward_shaping.calculate_reward): the reward function, plugged
     in through the `_calculate_reward()` hook exactly as the brief requires.
-  • Dev 3 (track 3 OSHA analysis): real hazard frequencies feed the injector.
+  • Dev 3 (context_risk OSHA analysis): real hazard frequencies feed the injector.
 
 Design rule from the plan: the agent's action only dictates Level 0–2 soft
 interventions. Level 3 is reserved for the environment-enforced hard rules and
