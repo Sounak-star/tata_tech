@@ -1,0 +1,53 @@
+{
+  "ravi": {
+    "id": "ravi",
+    "name": "Ravi Kumar",
+    "role": "Senior Excavator Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "ravi.jpg",
+    "calibration": {
+      "ear_baseline": 0.29,
+      "perclos_baseline": 0.06,
+      "blink_rate_baseline": 14.0,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing — alerts must not rely on sound (buzz + flash)."
+  },
+  "priya": {
+    "id": "priya",
+    "name": "Priya Sharma",
+    "role": "Trainee Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "priya.jpg",
+    "calibration": {
+      "ear_baseline": 0.31,
+      "perclos_baseline": 0.05,
+      "blink_rate_baseline": 16.0,
+      "calibrated": true
+    },
+    "notes": "Trainee — earlier warnings, simpler UI, fewer gauges."
+  },
+  "arjun": {
+    "id": "arjun",
+    "name": "Arjun Mehta",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "deuteranopia",
+    "language": "ta",
+    "experience": "intermediate",
+    "photo": "arjun.jpg",
+    "calibration": {
+      "ear_baseline": 0.28,
+      "perclos_baseline": 0.07,
+      "blink_rate_baseline": 13.0,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (deuteranopia) — use blue/white + icons, never red-vs-green alone."
+  }
+}

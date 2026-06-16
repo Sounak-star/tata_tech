@@ -1,0 +1,33 @@
+# ── SAARTHI — consolidated dependencies ──────────────────────────────────
+# Core (all pipelines + live demo). Enough to run `python run_demo.py`.
+numpy>=1.24
+pandas>=2.0
+xgboost>=2.0
+shap>=0.44
+scikit-learn>=1.3
+joblib>=1.3
+
+# Live system (Pipeline C) — server + brain → screen pipe
+fastapi>=0.110
+uvicorn>=0.30
+websockets>=12
+
+# Pipeline B — simulator / RL environment
+gymnasium>=0.29
+
+# ── Heavy training (CUDA) — see per-dev requirements_dev*.txt for details ──
+# PPO (Pipeline B) trains on the GPU via PyTorch. Install the CUDA build of torch
+# from the PyTorch index matching your CUDA runtime, e.g. CUDA 12.8:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+# XGBoost training (Pipelines A & context) uses device='cuda' automatically.
+torch>=2.2                  # install the +cuXXX wheel for GPU training
+stable-baselines3>=2.2      # PPO agent
+imbalanced-learn>=0.12      # SMOTE balancing (Pipeline A)
+tensorboard>=2.15           # PPO convergence monitoring
+
+# ── Optional: real webcam / vision path (not needed for the offline demo) ──
+# opencv-python>=4.8        # camera capture
+# mediapipe>=0.10           # face landmarks -> 12 fatigue features
+# ultralytics>=8.1          # YOLO11-nano person detection (blind-spot zones)
+# deepface>=0.0.90          # face-ID operator recognition
+# onnxruntime>=1.17         # quantized model runtime (edge proof)

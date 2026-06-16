@@ -1,0 +1,10 @@
+# Pipeline A — Dev 2 (AI/ML & Explainability): train_xgboost.py, reason_card.py, test_webcam.py
+# Training uses CUDA via XGBoost device='cuda' (auto-detected). XGBoost ships with
+# GPU support in its standard wheel; ensure an NVIDIA driver + CUDA runtime is present.
+xgboost>=2.0
+shap>=0.44
+scikit-learn>=1.3
+pandas>=2.0
+numpy>=1.24
+opencv-python>=4.8
+mediapipe>=0.10

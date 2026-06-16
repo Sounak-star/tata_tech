@@ -1,0 +1,9 @@
+# Pipeline B — Dev 2 (RL & Policy): adaptive_fallback, reward_shaping, train_ppo, enjoy_ppo
+# PPO trains on the GPU via PyTorch (device='cuda'). Install the CUDA build of torch
+# from the official index, matching your CUDA runtime (example: CUDA 12.8 below):
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+torch>=2.2            # install the +cuXXX build from the PyTorch index for GPU
+stable-baselines3>=2.2
+gymnasium>=0.29
+numpy>=1.24
+tensorboard>=2.15

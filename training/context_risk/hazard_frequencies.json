@@ -1,0 +1,18 @@
+{
+  "description": "OSHA Severe-Injury hazard mix for construction heavy-equipment incidents. Source: training/context_risk/ analysis. Used to seed simulator hazard frequencies (Pipeline B).",
+  "source": "OSHA Severe Injury Reports 2015-2025 (NAICS 23*, vehicle/equipment)",
+  "hazard_frequencies": {
+    "Struck-by": 0.4033,
+    "Fall": 0.2326,
+    "Caught-in": 0.1645,
+    "Other": 0.0462,
+    "Electrocution": 0.0392,
+    "Tip-over": 0.0348,
+    "Contact-with": 0.0217,
+    "Pinch-Point": 0.0201,
+    "Collision": 0.0159,
+    "Burns": 0.0098,
+    "Run-over": 0.0072,
+    "Back-over": 0.0049
+  }
+}

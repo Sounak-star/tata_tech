@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAARTHI — SmartCabin Panel</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#e6edf3; --muted:#8b949e;
+          --green:#2ea043; --amber:#d29922; --red:#f85149; --blue:#1f6feb; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg);
+         color:var(--txt); }
+  header { display:flex; align-items:center; justify-content:space-between;
+           padding:12px 20px; background:var(--panel); border-bottom:1px solid var(--line); }
+  header h1 { font-size:18px; margin:0; letter-spacing:1px; }
+  header .status { font-size:12px; color:var(--muted); }
+  .grid { display:grid; grid-template-columns:280px 1fr 320px; gap:14px; padding:14px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .card h2 { font-size:12px; text-transform:uppercase; color:var(--muted);
+             margin:0 0 10px; letter-spacing:1px; }
+  .op-name { font-size:20px; font-weight:600; }
+  .op-role { color:var(--muted); font-size:13px; margin-bottom:8px; }
+  .tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px;
+         background:#21262d; border:1px solid var(--line); margin:2px 2px 0 0; }
+  .banner { font-size:26px; font-weight:700; text-align:center; padding:18px; border-radius:10px;
+            transition:background .2s; }
+  .gauge { height:14px; background:#21262d; border-radius:7px; overflow:hidden; margin:6px 0 2px; }
+  .gauge > div { height:100%; width:0; transition:width .2s; }
+  .row { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+  .zone { display:flex; gap:6px; margin-top:6px; }
+  .zone span { flex:1; text-align:center; padding:8px 0; border-radius:6px; font-size:12px;
+               background:#21262d; opacity:.35; font-weight:600; }
+  .zone span.on { opacity:1; }
+  .big { font-size:40px; font-weight:700; text-align:center; }
+  .reason { background:#0b1d33; border:1px solid var(--blue); border-radius:8px; padding:10px;
+            font-size:13px; min-height:60px; }
+  .reason .t { font-weight:700; margin-bottom:4px; }
+  .factor { font-size:12px; color:var(--muted); }
+  ul.timeline { list-style:none; margin:0; padding:0; max-height:240px; overflow:auto; }
+  ul.timeline li { font-size:12px; padding:6px 8px; border-bottom:1px solid var(--line); }
+  ul.timeline li .lv { font-weight:700; }
+  .badge { font-size:13px; padding:6px 10px; border-radius:8px; display:inline-block; font-weight:600; }
+  .muted { color:var(--muted); font-size:12px; }
+  .phase { font-size:11px; color:var(--muted); }
+  .flash { animation:flash .5s ease-in-out 3; }
+  @keyframes flash { 0%,100%{background:var(--panel);} 50%{background:#3a1d1d;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛠 SAARTHI · SmartCabin AI Copilot</h1>
+  <div class="status">
+    <span id="conn">● connecting…</span> &nbsp;|&nbsp;
+    <span class="phase" id="phase"></span> &nbsp;|&nbsp;
+    <span id="backend"></span>
+  </div>
+</header>
+
+<div class="grid">
+  <!-- Left: operator -->
+  <section class="card" id="opcard">
+    <h2>Operator</h2>
+    <div class="op-name" id="opName">—</div>
+    <div class="op-role" id="opRole"></div>
+    <div id="opTags"></div>
+    <div style="margin-top:14px">
+      <h2>Switch operator</h2>
+      <div id="opButtons"></div>
+    </div>
+    <div style="margin-top:14px">
+      <h2>Context risk (site)</h2>
+      <span class="badge" id="ctxBadge">—</span>
+    </div>
+  </section>
+
+  <!-- Center: live state -->
+  <section style="display:flex; flex-direction:column; gap:14px;">
+    <div class="card">
+      <div class="banner" id="banner" style="background:#21262d;">ALL CLEAR</div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 1fr; padding:0; gap:14px;">
+      <div class="card">
+        <h2>Fatigue</h2>
+        <div class="row"><span id="fatDecision">—</span><span id="fatPct">0%</span></div>
+        <div class="gauge"><div id="fatBar" style="background:var(--amber)"></div></div>
+        <div class="muted" id="fatSev"></div>
+      </div>
+      <div class="card">
+        <h2>Live risk score</h2>
+        <div class="big" id="riskScore">0</div>
+        <div class="gauge"><div id="riskBar" style="background:var(--red)"></div></div>
+        <div class="muted" id="riskFormula"></div>
+      </div>
+      <div class="card">
+        <h2>Blind-spot zone</h2>
+        <div class="zone">
+          <span id="zGREEN" style="color:var(--green)">GREEN</span>
+          <span id="zAMBER" style="color:var(--amber)">AMBER</span>
+          <span id="zRED" style="color:var(--red)">RED</span>
+        </div>
+        <div class="row" style="margin-top:10px"><span>Machine speed</span><span id="mSpeed">0</span></div>
+        <div class="row"><span>Reversing</span><span id="mRev">no</span></div>
+      </div>
+      <div class="card">
+        <h2>Machine tilt</h2>
+        <div class="big" id="tiltDeg">0°</div>
+        <div class="muted" id="tiltStatus"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Reason card — why did this fire?</h2>
+      <div class="reason" id="reason"><span class="muted">No active alert.</span></div>
+    </div>
+  </section>
+
+  <!-- Right: timeline -->
+  <section class="card">
+    <h2>Incident timeline (Level ≥ 2)</h2>
+    <ul class="timeline" id="timeline"><li class="muted">No incidents yet.</li></ul>
+  </section>
+</div>
+
+<script>
+const LEVEL_COLORS = {0:"#21262d",1:"#3a3320",2:"#5a3a17",3:"#5a1717"};
+const ZONE = {GREEN:"zGREEN",AMBER:"zAMBER",RED:"zRED"};
+let ws;
+
+function connect(){
+  ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = ()=>{ document.getElementById('conn').textContent="● live"; ws.send("hi"); };
+  ws.onclose = ()=>{ document.getElementById('conn').textContent="● disconnected";
+                     setTimeout(connect,1000); };
+  ws.onmessage = e => render(JSON.parse(e.data));
+}
+
+async function loadOps(){
+  const r = await fetch('/api/profiles'); const ops = await r.json();
+  const box = document.getElementById('opButtons'); box.innerHTML="";
+  Object.values(ops).forEach(o=>{
+    const b=document.createElement('button'); b.textContent=o.name.split(' ')[0];
+    b.style="margin:2px;padding:6px 10px;background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:6px;cursor:pointer";
+    b.onclick=()=>fetch('/api/operator/'+o.id,{method:'POST'});
+    box.appendChild(b);
+  });
+  const h=await (await fetch('/api/health')).json();
+  document.getElementById('backend').textContent=`fatigue:${h.fatigue_backend} · vision:${h.person_backend}`;
+}
+
+function render(f){
+  document.getElementById('phase').textContent = f.phase ? ("demo: "+f.phase) : "";
+  // operator
+  document.getElementById('opName').textContent=f.operator.name;
+  document.getElementById('opRole').textContent=f.operator.role;
+  const tags=[`🌐 ${f.operator.language}`,`🎓 ${f.operator.experience}`];
+  if(f.operator.hearing==='impaired') tags.push('🦻 hearing-impaired');
+  if(f.operator.color_vision!=='normal') tags.push('🎨 colour-blind');
+  document.getElementById('opTags').innerHTML=tags.map(t=>`<span class="tag">${t}</span>`).join('');
+  // fatigue
+  const p=Math.round(f.fatigue.p*100);
+  document.getElementById('fatPct').textContent=p+'%';
+  document.getElementById('fatDecision').textContent=f.fatigue.decision;
+  document.getElementById('fatBar').style.width=p+'%';
+  document.getElementById('fatSev').textContent='severity: '+f.fatigue.severity;
+  // risk
+  document.getElementById('riskScore').textContent=Math.round(f.risk_score.score);
+  document.getElementById('riskBar').style.width=f.risk_score.score+'%';
+  document.getElementById('riskFormula').textContent=f.risk_score.formula;
+  // zone
+  Object.values(ZONE).forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById(ZONE[f.zone]).classList.add('on');
+  document.getElementById('mSpeed').textContent=f.machine.speed+' m/s';
+  document.getElementById('mRev').textContent=f.machine.reversing?'YES ⚠':'no';
+  // tilt
+  document.getElementById('tiltDeg').textContent=f.tilt.tilt_angle+'°';
+  document.getElementById('tiltStatus').textContent='status: '+f.tilt.status;
+  // banner
+  const b=document.getElementById('banner');
+  const lvl=f.alert.level;
+  b.style.background=LEVEL_COLORS[lvl];
+  b.textContent = lvl===0 ? "ALL CLEAR" : `LEVEL ${lvl} · ${f.alert.label.toUpperCase()}`;
+  if(f.alert.delivery && f.alert.delivery.flash){ b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+  // reason card
+  const rc=document.getElementById('reason');
+  if(f.reason_card){
+    let html=`<div class="t">${f.reason_card.title}</div><div>${f.reason_card.detail}</div>`;
+    (f.reason_card.factors||[]).forEach(x=>{
+      html+=`<div class="factor">• ${x.label||x.feature}: ${x.value} (${x.direction})</div>`; });
+    html+=`<div class="factor" style="margin-top:6px">tier: ${f.alert.tier} · source: ${f.reason_card.source}</div>`;
+    rc.innerHTML=html;
+  } else { rc.innerHTML='<span class="muted">No active alert.</span>'; }
+  // context risk
+  if(f.context_risk && f.context_risk.score!=null){
+    const c=document.getElementById('ctxBadge');
+    c.textContent=`${f.context_risk.bucket} · ${f.context_risk.score}`;
+    c.style.background=f.context_risk.color; c.style.color='#fff';
+  }
+  if(lvl>=2) refreshTimeline();
+}
+
+async function refreshTimeline(){
+  const items=await (await fetch('/api/timeline')).json();
+  const ul=document.getElementById('timeline');
+  if(!items.length){ ul.innerHTML='<li class="muted">No incidents yet.</li>'; return; }
+  ul.innerHTML=items.map(e=>{
+    const time=new Date(e.ts*1000).toLocaleTimeString();
+    return `<li><span class="lv">L${e.level}</span> ${e.title}
+            <div class="muted">${time} · ${e.operator} · risk ${e.risk_score}</div></li>`;
+  }).join('');
+}
+
+loadOps(); connect();
+</script>
+</body>
+</html>

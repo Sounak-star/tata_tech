@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAARTHI — The Seat (phone buzz)</title>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;}
+  .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        text-align:center;transition:background .15s;padding:20px;}
+  h1{font-size:20px;letter-spacing:1px;}
+  .lvl{font-size:64px;font-weight:800;margin:10px;}
+  .txt{font-size:22px;min-height:30px;}
+  .sub{color:#8b949e;font-size:13px;margin-top:18px;}
+  button{margin-top:24px;padding:12px 22px;font-size:16px;border:0;border-radius:10px;
+         background:#1f6feb;color:#fff;font-weight:600;}
+  .buzzing{animation:shake .25s infinite;}
+  @keyframes shake{0%{transform:translateX(-3px)}50%{transform:translateX(3px)}100%{transform:translateX(-3px)}}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <h1>🪑 SAARTHI · The Seat</h1>
+  <div class="lvl" id="lvl">—</div>
+  <div class="txt" id="txt">Waiting for the cab…</div>
+  <div class="sub" id="sub"></div>
+  <button id="enable">Tap to enable buzz</button>
+</div>
+<script>
+// iPhones block the Vibration API; Android Chrome supports it. The button is a
+// user gesture so the browser permits vibration afterward.
+let buzzOK=false;
+document.getElementById('enable').onclick=()=>{ buzzOK=true;
+  if(navigator.vibrate) navigator.vibrate(80);
+  document.getElementById('enable').textContent='Buzz enabled ✓'; };
+
+const COLORS={0:'#0d1117',1:'#3a3320',2:'#5a3a17',3:'#5a1717'};
+let lastLevel=0;
+
+function connect(){
+  const ws=new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen=()=>ws.send('hi');
+  ws.onclose=()=>setTimeout(connect,1000);
+  ws.onmessage=e=>{
+    const f=JSON.parse(e.data); const d=f.alert.delivery||{}; const lvl=f.alert.level;
+    const wrap=document.getElementById('wrap');
+    wrap.style.background=COLORS[lvl]||'#0d1117';
+    document.getElementById('lvl').textContent=lvl>0?('L'+lvl):'OK';
+    document.getElementById('txt').textContent=d.text||(lvl>0?f.alert.label:'All clear');
+    document.getElementById('sub').textContent=
+      `${f.operator.name} · ${d.buzz?('buzz: '+(d.buzz_strength||'on')):'buzz: off'} · flash: ${d.flash?'on':'off'}`;
+    // Buzz on rising alert level or any active buzz delivery.
+    if(d.buzz && lvl>=lastLevel && lvl>0){
+      wrap.classList.add('buzzing');
+      if(buzzOK && navigator.vibrate){
+        navigator.vibrate(lvl>=3?[200,80,200,80,200]:(d.buzz_strength==='strong'?[150,60,150]:[100]));
+      }
+      setTimeout(()=>wrap.classList.remove('buzzing'),600);
+    }
+    lastLevel=lvl;
+  };
+}
+connect();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# Pipeline B — Dev 1 (Simulation & Environment Lead) dependencies
+gymnasium>=0.29
+pandas>=2.0
+numpy>=1.24

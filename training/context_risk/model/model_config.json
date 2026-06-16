@@ -1,0 +1,122 @@
+{
+  "feature_columns": [
+    "machine_type",
+    "task_type",
+    "time_of_day",
+    "weather_condition",
+    "month",
+    "day_of_week"
+  ],
+  "label_classes": {
+    "machine_type": [
+      "Aerial Lift",
+      "Backhoe",
+      "Bulldozer",
+      "Concrete Mixer",
+      "Concrete Pump",
+      "Crane",
+      "Dump Truck",
+      "Excavator",
+      "Forklift",
+      "Grader",
+      "Loader",
+      "Paver",
+      "Pile Driver",
+      "Roller",
+      "Trencher",
+      "Truck"
+    ],
+    "task_type": [
+      "Demolition",
+      "Excavation",
+      "General Construction",
+      "Idling/Parked",
+      "Loading/Unloading",
+      "Maintenance",
+      "Mounting/Dismounting",
+      "Operating",
+      "Setup/Positioning"
+    ],
+    "time_of_day": [
+      "Afternoon",
+      "Evening",
+      "Morning",
+      "Night",
+      "Unknown"
+    ],
+    "weather_condition": [
+      "Clear/Unknown",
+      "Heat",
+      "Muddy",
+      "Rain",
+      "Snow/Ice",
+      "Wet Surface",
+      "Wind"
+    ],
+    "day_of_week": [
+      "Friday",
+      "Monday",
+      "Saturday",
+      "Sunday",
+      "Thursday",
+      "Tuesday",
+      "Wednesday"
+    ]
+  },
+  "risk_buckets": {
+    "Low": [
+      0,
+      25
+    ],
+    "Medium": [
+      25,
+      50
+    ],
+    "High": [
+      50,
+      75
+    ],
+    "Critical": [
+      75,
+      100
+    ]
+  },
+  "hazard_lethality_weights": {
+    "Struck-by": 0.85,
+    "Tip-over": 0.9,
+    "Back-over": 0.92,
+    "Run-over": 0.95,
+    "Electrocution": 0.88,
+    "Caught-in": 0.75,
+    "Fall": 0.7,
+    "Collision": 0.8,
+    "Burns": 0.72,
+    "Pinch-Point": 0.55,
+    "Contact-with": 0.5,
+    "Other": 0.45
+  },
+  "weather_risk_weights": {
+    "Clear/Unknown": 0.0,
+    "Rain": 0.5,
+    "Snow/Ice": 1.2,
+    "Wind": 0.8,
+    "Heat": 0.4,
+    "Fog": 1.0,
+    "Muddy": 0.5,
+    "Wet Surface": 0.4
+  },
+  "time_risk_weights": {
+    "Morning": 0.0,
+    "Afternoon": 0.1,
+    "Evening": 0.6,
+    "Night": 1.2,
+    "Unknown": 0.1
+  },
+  "model_metrics": {
+    "test_r2": 0.29656033256577585,
+    "test_mae": 8.380680776831708,
+    "test_rmse": 11.778608113549536,
+    "cv_r2_mean": 0.2265898453298587,
+    "bucket_accuracy": 62.82051282051282
+  }
+}
