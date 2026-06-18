@@ -18,6 +18,8 @@ A "tick" consumes a raw signal dict (from a webcam pipeline or the demo source):
 
 from __future__ import annotations
 
+import math
+import sys
 from typing import Optional
 
 from .engine import HybridDecisionEngine
@@ -34,10 +36,11 @@ class Brain:
     """The full in-cab copilot: fuses Pipelines A, B and the context model."""
 
     def __init__(self, store: Optional[ProfileStore] = None,
-                 event_log: Optional[EventLog] = None) -> None:
+                 event_log: Optional[EventLog] = None,
+                 calibration_rows: Optional[list[dict]] = None) -> None:
         self.store = store or ProfileStore()
         self.faceid = FaceID(self.store)
-        self.fatigue = FatigueEngine()
+        self.fatigue = FatigueEngine(calibration_rows)
         self.persons = PersonDetector()
         self.engine = HybridDecisionEngine()
         self.log = event_log or EventLog()
@@ -55,8 +58,28 @@ class Brain:
         profile = self.faceid.recognise()
 
         # Q2 — fatigue (real XGBoost model; features from webcam or synthesised).
-        features = signal.get("features") or synth_window(signal.get("drowsiness", 0.0))
+        raw_feats = signal.get("features")
+        feat_src = "camera" if raw_feats is not None else "demo-synth"
+        features = raw_feats if raw_feats is not None else synth_window(signal.get("drowsiness", 0.0))
         fatigue = self.fatigue.update(features)
+
+        # ── Per-tick diagnostic log ──────────────────────────────────────────
+        _nan_ct = sum(1 for v in features.values() if isinstance(v, float) and math.isnan(v))
+        print(
+            f"[TICK {self._tick:04d}] src={feat_src} phase={signal.get('phase')} "
+            f"drown={signal.get('drowsiness', 0.0):.3f} NaNs={_nan_ct} "
+            f"p_raw={fatigue.get('p_raw', fatigue['p_at_risk']):.4f} "
+            f"p_smooth={fatigue['p_at_risk']:.4f} "
+            f"{fatigue['decision']}/{fatigue['severity']}",
+            file=sys.stderr, flush=True,
+        )
+        if raw_feats is not None:
+            _fstr = " ".join(f"{k}={v:.4f}" for k, v in raw_feats.items())
+            print(f"  RAW: {_fstr}", file=sys.stderr, flush=True)
+        else:
+            print(f"  RAW: NONE → synth(drown={signal.get('drowsiness', 0.0):.3f})",
+                  file=sys.stderr, flush=True)
+        # ────────────────────────────────────────────────────────────────────
 
         # Q3 — blind-spot zone.
         zinfo = self.persons.detect(simulated_zone=signal.get("zone", 0))

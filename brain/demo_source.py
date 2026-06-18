@@ -109,3 +109,30 @@ class DemoSource:
     def __iter__(self) -> Iterator[Dict]:
         while True:
             yield self.step()
+
+
+class HybridLiveSource:
+    """
+    Wraps DemoSource for simulated phase, zone, tilt, etc.
+    But uses real live features from BackgroundCameraTracker instead of drowsiness.
+    """
+    def __init__(self, demo_source: DemoSource, camera_tracker):
+        self.demo_source = demo_source
+        self.camera_tracker = camera_tracker
+
+    def step(self) -> Dict:
+        signal = self.demo_source.step()
+        # In live-camera mode the camera is the sole fatigue source.
+        # Zero drowsiness so the pipeline's synth fallback (used only while the
+        # first camera window is still filling) yields ALERT rather than whatever
+        # dramatic value the demo script currently has (e.g. 0.92 in fatigue_peak).
+        # The script continues to drive zone / tilt / machine_speed only.
+        signal["drowsiness"] = 0.0
+        latest = self.camera_tracker.get_latest_features()
+        if latest is not None:
+            signal["features"] = latest
+        return signal
+
+    def __iter__(self) -> Iterator[Dict]:
+        while True:
+            yield self.step()

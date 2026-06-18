@@ -17,19 +17,27 @@ import json
 from typing import List
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import paths
-from .demo_source import DemoSource
+from .demo_source import DemoSource, HybridLiveSource
 from .pipeline import Brain
+from .live_camera import BackgroundCameraTracker, HAS_MEDIAPIPE
 
 TICK_HZ = 6.0  # readable playback rate for the demo (raise toward 10 for "live")
+CAMERA_INDEX = 0  # Configurable camera index
 
 app = FastAPI(title="SAARTHI — SmartCabin AI Copilot")
 
-brain = Brain()
-source = DemoSource()
+if HAS_MEDIAPIPE:
+    tracker = BackgroundCameraTracker(camera_index=CAMERA_INDEX)
+    brain = Brain()  # Will be re-initialized after calibration
+    source = HybridLiveSource(DemoSource(), tracker)
+else:
+    tracker = None
+    brain = Brain()
+    source = DemoSource()
 
 
 class Hub:
@@ -68,13 +76,66 @@ async def _loop() -> None:
             brain.switch_operator(signal["_switch_operator"])
         frame = brain.tick(signal)
         frame["phase"] = signal.get("phase")
+        # Keep the camera preview overlay in sync with the latest fatigue decision.
+        if HAS_MEDIAPIPE:
+            tracker.set_fatigue_info(frame["fatigue"])
         await hub.broadcast(frame)
         await asyncio.sleep(1.0 / TICK_HZ)
 
 
+@app.get("/video_feed")
+async def video_feed() -> StreamingResponse:
+    """MJPEG stream of the annotated camera feed for the dashboard preview."""
+    if not HAS_MEDIAPIPE:
+        return JSONResponse({"error": "camera not available"}, status_code=503)
+
+    async def _gen():
+        while True:
+            jpeg = tracker.get_latest_annotated_frame()
+            # tracker always returns at least the placeholder frame — never None
+            if jpeg is not None:
+                chunk = (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n"
+                    + f"Content-Length: {len(jpeg)}\r\n\r\n".encode()
+                    + jpeg
+                    + b"\r\n"
+                )
+                yield chunk
+            await asyncio.sleep(1.0 / 20.0)  # cap preview at 20 fps
+
+    return StreamingResponse(
+        _gen(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+async def _calibrate_and_start_camera():
+    if HAS_MEDIAPIPE:
+        print("[Server] Starting calibration background task...")
+        loop = asyncio.get_running_loop()
+        # Run the blocking calibration in a separate thread
+        calibration_rows = await loop.run_in_executor(None, tracker.calibrate, 25.0)
+        
+        # Inject the calibrated engine into the live brain
+        from .fatigue import FatigueEngine
+        brain.fatigue = FatigueEngine(calibration_rows)
+        
+        tracker.start()
+        print("[Server] Calibration complete. Live features now driving fatigue.")
+
+
 @app.on_event("startup")
 async def _startup() -> None:
+    asyncio.create_task(_calibrate_and_start_camera())
     asyncio.create_task(_loop())
+
+
+@app.on_event("shutdown")
+async def _shutdown() -> None:
+    if HAS_MEDIAPIPE:
+        tracker.stop()  # signals the thread and calls cap.release()
 
 
 @app.websocket("/ws")

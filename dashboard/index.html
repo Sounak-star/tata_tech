@@ -78,12 +78,25 @@
     <div class="card">
       <div class="banner" id="banner" style="background:#21262d;">ALL CLEAR</div>
     </div>
-    <div class="grid" style="grid-template-columns:1fr 1fr; padding:0; gap:14px;">
+    <div class="grid" style="grid-template-columns:1fr 1fr 1fr; padding:0; gap:14px;">
       <div class="card">
         <h2>Fatigue</h2>
         <div class="row"><span id="fatDecision">—</span><span id="fatPct">0%</span></div>
         <div class="gauge"><div id="fatBar" style="background:var(--amber)"></div></div>
         <div class="muted" id="fatSev"></div>
+      </div>
+      <!-- Camera preview — spans both grid rows, sits between Fatigue and Live risk -->
+      <div class="card" style="padding:0; overflow:hidden; grid-row:1/3;">
+        <h2 style="padding:10px 14px 6px; margin:0;">Camera preview</h2>
+        <img id="camPreview" src="/video_feed"
+             style="width:100%; display:block; border-radius:0 0 8px 8px;"
+             onerror="this.style.display='none';
+                      document.getElementById('camMsg').style.display='block';">
+        <div id="camMsg"
+             style="display:none; padding:18px 12px; color:var(--muted);
+                    text-align:center; font-size:12px;">
+          Camera not available
+        </div>
       </div>
       <div class="card">
         <h2>Live risk score</h2>
@@ -147,7 +160,8 @@ async function loadOps(){
 }
 
 function render(f){
-  document.getElementById('phase').textContent = f.phase ? ("demo: "+f.phase) : "";
+  document.getElementById('phase').textContent =
+    f.phase ? ("machine: "+f.phase+" │ fatigue: LIVE") : "fatigue: LIVE";
   // operator
   document.getElementById('opName').textContent=f.operator.name;
   document.getElementById('opRole').textContent=f.operator.role;

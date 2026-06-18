@@ -26,7 +26,7 @@ from env.action_space import InterventionAction
 from policies.adaptive_fallback import AdaptiveFallbackPolicy
 from policies.intervention_logic import RuleBasedInterventionLogic
 
-TICKS_PER_SECOND = 10
+TICKS_PER_SECOND = 6   # matches server.py TICK_HZ so hard-rule fires at true 2 s
 FATIGUE_CRITICAL = 0.85
 FATIGUE_HARD_SECONDS = 2.0
 SPEED_MOVING = 0.3

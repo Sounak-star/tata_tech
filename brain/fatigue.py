@@ -15,6 +15,8 @@ the loop alive (clearly flagged via `engine.backend`).
 
 from __future__ import annotations
 
+import math
+import sys
 import random
 from typing import Dict, List, Optional, Tuple
 
@@ -58,25 +60,60 @@ class FatigueEngine:
         self.backend = "fallback"
         self._monitor = None
         rng = random.Random(11)
-        # Calibrate on a realistic spread of ALERT-state windows (low drowsiness
-        # with natural variation) so per-feature std reflects normal variation —
-        # otherwise tiny std inflates every later deviation into "at-risk".
-        rows = calibration_rows or [
-            synth_window(rng.uniform(0.0, 0.18), rng) for _ in range(60)
-        ]
+        if calibration_rows is None:
+            # No camera at all — synthetic is the only option, and it's known.
+            rows = [synth_window(rng.uniform(0.0, 0.18), rng) for _ in range(60)]
+            print("[FatigueEngine] No camera — using synthetic alert baseline (offline demo).",
+                  file=sys.stderr, flush=True)
+        elif len(calibration_rows) == 0:
+            # calibrate() should have retried until it got real rows.  Reaching
+            # here means something bypassed that logic — refuse to silently use
+            # synthetic, because results would be unreliable for a live operator.
+            raise RuntimeError(
+                "[FatigueEngine] Received empty calibration_rows from a live-camera "
+                "session.  calibrate() must retry until it captures real face data — "
+                "aborting rather than silently using a synthetic baseline."
+            )
+        else:
+            rows = calibration_rows
         try:
             from fatigue_monitor import FatigueMonitor, calibrate
 
             baseline = calibrate(rows)
-            self._monitor = FatigueMonitor(baseline)
+            # smooth_window=5 (~7.5 s) keeps the live display responsive; the
+            # default of 30 (45 s) makes it too sluggish to show face changes.
+            self._monitor = FatigueMonitor(baseline, smooth_window=5)
             self.backend = "xgboost"
+
+            # Diagnostic: print the baseline so we can verify calibration worked.
+            _src = "WEBCAM" if calibration_rows else "SYNTHETIC-FALLBACK"
+            print(f"[FatigueEngine] Baseline ({_src}, {len(rows)} rows):", file=sys.stderr, flush=True)
+            for feat, stats in baseline.items():
+                print(f"  {feat}: mean={stats['mean']:.4f} std={stats['std']:.4f}",
+                      file=sys.stderr, flush=True)
         except Exception as exc:  # noqa: BLE001 — degrade gracefully
             self._err = str(exc)
             self._baseline = self._simple_baseline(rows)
+            print(f"[FatigueEngine] XGBoost unavailable ({exc}); using fallback heuristic.",
+                  file=sys.stderr, flush=True)
 
     # ── public ──────────────────────────────────────────────────────────
     def update(self, features: Dict[str, float]) -> dict:
         if self._monitor is not None:
+            # Log normalized features (what the model actually sees after
+            # (raw - baseline_mean) / baseline_std).
+            try:
+                bl = self._monitor.baseline
+                norm_vals = {
+                    f: (features.get(f, math.nan) - bl[f]["mean"]) / (bl[f]["std"] + 1e-6)
+                    for f in FEATURES
+                }
+                _nan_n = sum(1 for v in norm_vals.values() if math.isnan(v))
+                _nstr = " ".join(f"{k}={v:.2f}" for k, v in norm_vals.items())
+                print(f"  NORM[NaNs={_nan_n}]: {_nstr}", file=sys.stderr, flush=True)
+            except Exception:
+                pass
+
             res = self._monitor.update(features)
             res["reasons"] = [
                 {"feature": f, "value": round(float(v), 3), "direction": dr}

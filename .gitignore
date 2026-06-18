@@ -18,3 +18,6 @@ data/events.db
 # Training artifacts (TensorBoard logs are large; the saved PPO policy IS kept)
 training/pipeline_b_simulator/runs/
 training/**/*.tfevents.*
+
+# Downloaded models
+face_landmarker.task
