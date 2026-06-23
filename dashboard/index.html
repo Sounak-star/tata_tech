@@ -5,45 +5,130 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SAARTHI — SmartCabin Panel</title>
 <style>
-  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#e6edf3; --muted:#8b949e;
-          --green:#2ea043; --amber:#d29922; --red:#f85149; --blue:#1f6feb; }
+  /* ── Design tokens ──────────────────────────────────────────────── */
+  :root {
+    --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#e6edf3; --muted:#8b949e;
+    /* Default (sighted) palette */
+    --green:#2ea043; --amber:#d29922; --red:#f85149; --blue:#1f6feb;
+    /* Banner level colours (sighted) */
+    --lvl0-bg:#1a2b1a; --lvl0-txt:#4caf50;
+    --lvl1-bg:#0d2137; --lvl1-txt:#29b6f6;
+    --lvl2-bg:#3a2600; --lvl2-txt:#ffb300;
+    --lvl3-bg:#3b0a0a; --lvl3-txt:#f85149;
+  }
+
+  /* ── Colour-blind-safe overrides (active when <html data-cb="1">) ─ */
+  html[data-cb="1"] {
+    --green:#1565c0;   /* blue  = safe */
+    --amber:#e65100;   /* orange = caution */
+    --red:#e65100;     /* orange = danger (never red-vs-green) */
+    --lvl0-bg:#0d1f38; --lvl0-txt:#42a5f5;
+    --lvl1-bg:#1a2a00; --lvl1-txt:#aed581;
+    --lvl2-bg:#3a1f00; --lvl2-txt:#ffa726;
+    --lvl3-bg:#3a1f00; --lvl3-txt:#ffa726;
+  }
+
+  /* ── Base ───────────────────────────────────────────────────────── */
   * { box-sizing:border-box; }
-  body { margin:0; font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg);
-         color:var(--txt); }
+  body { margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+         background:var(--bg); color:var(--txt); }
   header { display:flex; align-items:center; justify-content:space-between;
-           padding:12px 20px; background:var(--panel); border-bottom:1px solid var(--line); }
+           padding:12px 20px; background:var(--panel);
+           border-bottom:1px solid var(--line); }
   header h1 { font-size:18px; margin:0; letter-spacing:1px; }
   header .status { font-size:12px; color:var(--muted); }
-  .grid { display:grid; grid-template-columns:280px 1fr 320px; gap:14px; padding:14px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .grid { display:grid; grid-template-columns:280px 1fr 320px;
+          gap:14px; padding:14px; }
+  .card { background:var(--panel); border:1px solid var(--line);
+          border-radius:10px; padding:14px; }
   .card h2 { font-size:12px; text-transform:uppercase; color:var(--muted);
              margin:0 0 10px; letter-spacing:1px; }
   .op-name { font-size:20px; font-weight:600; }
-  .op-role { color:var(--muted); font-size:13px; margin-bottom:8px; }
+  .op-role  { color:var(--muted); font-size:13px; margin-bottom:8px; }
   .tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px;
          background:#21262d; border:1px solid var(--line); margin:2px 2px 0 0; }
-  .banner { font-size:26px; font-weight:700; text-align:center; padding:18px; border-radius:10px;
-            transition:background .2s; }
-  .gauge { height:14px; background:#21262d; border-radius:7px; overflow:hidden; margin:6px 0 2px; }
+
+  /* ── Alert banner ───────────────────────────────────────────────── */
+  .banner {
+    font-size:26px; font-weight:700; text-align:center; padding:18px;
+    border-radius:10px; transition:background .3s, color .3s;
+  }
+  /* Level-specific colouring driven by data-level attribute */
+  .banner[data-level="0"] { background:var(--lvl0-bg); color:var(--lvl0-txt); }
+  .banner[data-level="1"] { background:var(--lvl1-bg); color:var(--lvl1-txt); }
+  .banner[data-level="2"] { background:var(--lvl2-bg); color:var(--lvl2-txt); }
+  .banner[data-level="3"] { background:var(--lvl3-bg); color:var(--lvl3-txt);
+                             animation:pulse-border 1.4s ease-in-out infinite; }
+  @keyframes pulse-border {
+    0%,100%{ box-shadow:0 0 0 0 rgba(248,81,73,.4); }
+    50%     { box-shadow:0 0 0 8px rgba(248,81,73,0); }
+  }
+  html[data-cb="1"] .banner[data-level="3"] {
+    animation:pulse-border-cb 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-border-cb {
+    0%,100%{ box-shadow:0 0 0 0 rgba(255,167,38,.4); }
+    50%     { box-shadow:0 0 0 8px rgba(255,167,38,0); }
+  }
+
+  .gauge { height:14px; background:#21262d; border-radius:7px;
+           overflow:hidden; margin:6px 0 2px; }
   .gauge > div { height:100%; width:0; transition:width .2s; }
-  .row { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+  .row { display:flex; justify-content:space-between;
+         font-size:13px; padding:4px 0; }
+
+  /* ── Blind-spot zone pills ──────────────────────────────────────── */
   .zone { display:flex; gap:6px; margin-top:6px; }
-  .zone span { flex:1; text-align:center; padding:8px 0; border-radius:6px; font-size:12px;
-               background:#21262d; opacity:.35; font-weight:600; }
+  .zone span {
+    flex:1; text-align:center; padding:8px 0; border-radius:6px;
+    font-size:12px; background:#21262d; opacity:.35; font-weight:600;
+  }
   .zone span.on { opacity:1; }
+  /* Zone colours driven by CSS var — auto-adapts to cb palette */
+  #zGREEN { color:var(--green); }
+  #zAMBER { color:var(--amber); }
+  #zRED   { color:var(--red);   }
+
   .big { font-size:40px; font-weight:700; text-align:center; }
-  .reason { background:#0b1d33; border:1px solid var(--blue); border-radius:8px; padding:10px;
-            font-size:13px; min-height:60px; }
+  .reason { background:#0b1d33; border:1px solid var(--blue);
+            border-radius:8px; padding:10px; font-size:13px; min-height:60px; }
   .reason .t { font-weight:700; margin-bottom:4px; }
   .factor { font-size:12px; color:var(--muted); }
-  ul.timeline { list-style:none; margin:0; padding:0; max-height:240px; overflow:auto; }
-  ul.timeline li { font-size:12px; padding:6px 8px; border-bottom:1px solid var(--line); }
+  ul.timeline { list-style:none; margin:0; padding:0;
+                max-height:240px; overflow:auto; }
+  ul.timeline li { font-size:12px; padding:6px 8px;
+                   border-bottom:1px solid var(--line); }
   ul.timeline li .lv { font-weight:700; }
-  .badge { font-size:13px; padding:6px 10px; border-radius:8px; display:inline-block; font-weight:600; }
+  .badge { font-size:13px; padding:6px 10px; border-radius:8px;
+           display:inline-block; font-weight:600; }
   .muted { color:var(--muted); font-size:12px; }
   .phase { font-size:11px; color:var(--muted); }
   .flash { animation:flash .5s ease-in-out 3; }
   @keyframes flash { 0%,100%{background:var(--panel);} 50%{background:#3a1d1d;} }
+
+  /* ── Camera preview: contain so overlaid text is never cropped ── */
+  #camWrap {
+    padding:0; overflow:hidden; grid-row:1/3; display:flex;
+    flex-direction:column;
+  }
+  #camPreview {
+    width:100%; display:block;
+    object-fit:contain;          /* never crop the EAR/FATIGUE overlay text */
+    background:#000;
+    border-radius:0 0 8px 8px;
+    /* Let the image define its natural height — no empty black void */
+    max-height:360px;
+  }
+
+  /* ── Context-risk badge sub-label ───────────────────────────────── */
+  #ctxBadge { display:flex; flex-direction:column; align-items:flex-start;
+              gap:2px; }
+  #ctxBadge .ctx-level { font-size:14px; font-weight:700; }
+  #ctxBadge .ctx-sub   { font-size:10px; font-weight:400; opacity:.8; }
+
+  /* ── Active operator button highlight ───────────────────────────── */
+  .op-btn.active { border-color:var(--blue) !important;
+                   background:#0d2137 !important; }
 </style>
 </head>
 <body>
@@ -61,7 +146,7 @@
   <section class="card" id="opcard">
     <h2>Operator</h2>
     <div class="op-name" id="opName">—</div>
-    <div class="op-role" id="opRole"></div>
+    <div class="op-role"  id="opRole"></div>
     <div id="opTags"></div>
     <div style="margin-top:14px">
       <h2>Switch operator</h2>
@@ -69,14 +154,21 @@
     </div>
     <div style="margin-top:14px">
       <h2>Context risk (site)</h2>
-      <span class="badge" id="ctxBadge">—</span>
+      <!--
+        CONTEXT_RISK_DEMO — hardcoded placeholder.
+        Replace with real model output from context_risk_api when available.
+      -->
+      <span class="badge" id="ctxBadge" style="background:#5a3a00; color:#fff;">
+        <span class="ctx-level">MODERATE</span>
+        <span class="ctx-sub">Urban construction · clear · daytime</span>
+      </span>
     </div>
   </section>
 
   <!-- Center: live state -->
   <section style="display:flex; flex-direction:column; gap:14px;">
     <div class="card">
-      <div class="banner" id="banner" style="background:#21262d;">ALL CLEAR</div>
+      <div class="banner" id="banner" data-level="0">ALL CLEAR</div>
     </div>
     <div class="grid" style="grid-template-columns:1fr 1fr 1fr; padding:0; gap:14px;">
       <div class="card">
@@ -85,11 +177,11 @@
         <div class="gauge"><div id="fatBar" style="background:var(--amber)"></div></div>
         <div class="muted" id="fatSev"></div>
       </div>
-      <!-- Camera preview — spans both grid rows, sits between Fatigue and Live risk -->
-      <div class="card" style="padding:0; overflow:hidden; grid-row:1/3;">
+      <!-- Camera preview — contain keeps overlay text fully visible -->
+      <div class="card" id="camWrap">
         <h2 style="padding:10px 14px 6px; margin:0;">Camera preview</h2>
         <img id="camPreview" src="/video_feed"
-             style="width:100%; display:block; border-radius:0 0 8px 8px;"
+             alt="Live camera feed"
              onerror="this.style.display='none';
                       document.getElementById('camMsg').style.display='block';">
         <div id="camMsg"
@@ -107,11 +199,14 @@
       <div class="card">
         <h2>Blind-spot zone</h2>
         <div class="zone">
-          <span id="zGREEN" style="color:var(--green)">GREEN</span>
-          <span id="zAMBER" style="color:var(--amber)">AMBER</span>
-          <span id="zRED" style="color:var(--red)">RED</span>
+          <!-- Icon labels shown in cb-safe mode via JS -->
+          <span id="zGREEN">GREEN</span>
+          <span id="zAMBER">AMBER</span>
+          <span id="zRED">RED</span>
         </div>
-        <div class="row" style="margin-top:10px"><span>Machine speed</span><span id="mSpeed">0</span></div>
+        <div class="row" style="margin-top:10px">
+          <span>Machine speed</span><span id="mSpeed">0</span>
+        </div>
         <div class="row"><span>Reversing</span><span id="mRev">no</span></div>
       </div>
       <div class="card">
@@ -134,89 +229,171 @@
 </div>
 
 <script>
-const LEVEL_COLORS = {0:"#21262d",1:"#3a3320",2:"#5a3a17",3:"#5a1717"};
-const ZONE = {GREEN:"zGREEN",AMBER:"zAMBER",RED:"zRED"};
-let ws;
+// ── Zone labels — default vs colour-blind-safe ───────────────────────────
+const ZONE_LABELS = {
+  normal:  { GREEN:'GREEN', AMBER:'AMBER', RED:'RED' },
+  cb:      { GREEN:'✓ SAFE', AMBER:'! CAUTION', RED:'✕ DANGER' },
+};
+// ── Fatigue severity labels ──────────────────────────────────────────────
+const SEV_LABELS = {
+  normal: { OK:'OK', MILD:'MILD', STRONG:'STRONG' },
+  cb:     { OK:'✓ OK', MILD:'! MILD', STRONG:'!! STRONG' },
+};
 
+let ws;
+let _cbMode = false;   // tracks current colour-blind state
+
+// ── Colour-blind mode toggle ─────────────────────────────────────────────
+function setCbMode(enabled) {
+  _cbMode = enabled;
+  document.documentElement.setAttribute('data-cb', enabled ? '1' : '0');
+  // Update zone pill text
+  const labels = enabled ? ZONE_LABELS.cb : ZONE_LABELS.normal;
+  document.getElementById('zGREEN').textContent = labels.GREEN;
+  document.getElementById('zAMBER').textContent = labels.AMBER;
+  document.getElementById('zRED').textContent   = labels.RED;
+}
+
+// ── WebSocket ────────────────────────────────────────────────────────────
 function connect(){
   ws = new WebSocket(`ws://${location.host}/ws`);
-  ws.onopen = ()=>{ document.getElementById('conn').textContent="● live"; ws.send("hi"); };
-  ws.onclose = ()=>{ document.getElementById('conn').textContent="● disconnected";
-                     setTimeout(connect,1000); };
+  ws.onopen  = ()=>{ document.getElementById('conn').textContent='● live'; ws.send('hi'); };
+  ws.onclose = ()=>{ document.getElementById('conn').textContent='● disconnected';
+                     setTimeout(connect, 1000); };
   ws.onmessage = e => render(JSON.parse(e.data));
 }
 
+// ── Load operator buttons ────────────────────────────────────────────────
+let _activeOpId = null;
 async function loadOps(){
-  const r = await fetch('/api/profiles'); const ops = await r.json();
-  const box = document.getElementById('opButtons'); box.innerHTML="";
-  Object.values(ops).forEach(o=>{
-    const b=document.createElement('button'); b.textContent=o.name.split(' ')[0];
-    b.style="margin:2px;padding:6px 10px;background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:6px;cursor:pointer";
-    b.onclick=()=>fetch('/api/operator/'+o.id,{method:'POST'});
+  const r = await fetch('/api/profiles');
+  const ops = await r.json();
+  const box = document.getElementById('opButtons');
+  box.innerHTML = '';
+  Object.values(ops).forEach(o => {
+    const b = document.createElement('button');
+    b.textContent = o.name.split(' ')[0];
+    b.id = 'opbtn-' + o.id;
+    b.className = 'op-btn';
+    b.style = 'margin:2px;padding:6px 10px;background:#21262d;color:#e6edf3;' +
+              'border:1px solid #30363d;border-radius:6px;cursor:pointer;transition:border-color .2s,background .2s;';
+    b.onclick = () => fetch('/api/operator/' + o.id, { method:'POST' });
     box.appendChild(b);
   });
-  const h=await (await fetch('/api/health')).json();
-  document.getElementById('backend').textContent=`fatigue:${h.fatigue_backend} · vision:${h.person_backend}`;
+  const h = await (await fetch('/api/health')).json();
+  document.getElementById('backend').textContent =
+    `fatigue:${h.fatigue_backend} · vision:${h.person_backend}`;
 }
 
+// ── Main render ──────────────────────────────────────────────────────────
 function render(f){
   document.getElementById('phase').textContent =
-    f.phase ? ("machine: "+f.phase+" │ fatigue: LIVE") : "fatigue: LIVE";
-  // operator
-  document.getElementById('opName').textContent=f.operator.name;
-  document.getElementById('opRole').textContent=f.operator.role;
-  const tags=[`🌐 ${f.operator.language}`,`🎓 ${f.operator.experience}`];
-  if(f.operator.hearing==='impaired') tags.push('🦻 hearing-impaired');
-  if(f.operator.color_vision!=='normal') tags.push('🎨 colour-blind');
-  document.getElementById('opTags').innerHTML=tags.map(t=>`<span class="tag">${t}</span>`).join('');
-  // fatigue
-  const p=Math.round(f.fatigue.p*100);
-  document.getElementById('fatPct').textContent=p+'%';
-  document.getElementById('fatDecision').textContent=f.fatigue.decision;
-  document.getElementById('fatBar').style.width=p+'%';
-  document.getElementById('fatSev').textContent='severity: '+f.fatigue.severity;
-  // risk
-  document.getElementById('riskScore').textContent=Math.round(f.risk_score.score);
-  document.getElementById('riskBar').style.width=f.risk_score.score+'%';
-  document.getElementById('riskFormula').textContent=f.risk_score.formula;
-  // zone
-  Object.values(ZONE).forEach(id=>document.getElementById(id).classList.remove('on'));
-  document.getElementById(ZONE[f.zone]).classList.add('on');
-  document.getElementById('mSpeed').textContent=f.machine.speed+' m/s';
-  document.getElementById('mRev').textContent=f.machine.reversing?'YES ⚠':'no';
-  // tilt
-  document.getElementById('tiltDeg').textContent=f.tilt.tilt_angle+'°';
-  document.getElementById('tiltStatus').textContent='status: '+f.tilt.status;
-  // banner
-  const b=document.getElementById('banner');
-  const lvl=f.alert.level;
-  b.style.background=LEVEL_COLORS[lvl];
-  b.textContent = lvl===0 ? "ALL CLEAR" : `LEVEL ${lvl} · ${f.alert.label.toUpperCase()}`;
-  if(f.alert.delivery && f.alert.delivery.flash){ b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
-  // reason card
-  const rc=document.getElementById('reason');
-  if(f.reason_card){
-    let html=`<div class="t">${f.reason_card.title}</div><div>${f.reason_card.detail}</div>`;
-    (f.reason_card.factors||[]).forEach(x=>{
-      html+=`<div class="factor">• ${x.label||x.feature}: ${x.value} (${x.direction})</div>`; });
-    html+=`<div class="factor" style="margin-top:6px">tier: ${f.alert.tier} · source: ${f.reason_card.source}</div>`;
-    rc.innerHTML=html;
-  } else { rc.innerHTML='<span class="muted">No active alert.</span>'; }
-  // context risk
-  if(f.context_risk && f.context_risk.score!=null){
-    const c=document.getElementById('ctxBadge');
-    c.textContent=`${f.context_risk.bucket} · ${f.context_risk.score}`;
-    c.style.background=f.context_risk.color; c.style.color='#fff';
+    f.phase ? ('machine: '+f.phase+' │ fatigue: LIVE') : 'fatigue: LIVE';
+
+  // ── operator ────────────────────────────────────────────────────────
+  const op = f.operator;
+  document.getElementById('opName').textContent = op.name;
+  document.getElementById('opRole').textContent = op.role;
+
+  const isColourBlind = op.color_vision !== 'normal';
+  // Drive cb-safe mode from the active operator's profile
+  if (isColourBlind !== _cbMode) setCbMode(isColourBlind);
+
+  // Highlight active operator button
+  if (op.id !== _activeOpId) {
+    if (_activeOpId) {
+      const prev = document.getElementById('opbtn-' + _activeOpId);
+      if (prev) prev.classList.remove('active');
+    }
+    const cur = document.getElementById('opbtn-' + op.id);
+    if (cur) cur.classList.add('active');
+    _activeOpId = op.id;
   }
-  if(lvl>=2) refreshTimeline();
+
+  const tags = [`🌐 ${op.language}`, `🎓 ${op.experience}`];
+  if (op.hearing === 'impaired')    tags.push('🦻 hearing-impaired');
+  if (op.color_vision !== 'normal') tags.push('🎨 colour-blind');
+  document.getElementById('opTags').innerHTML =
+    tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+  // ── fatigue ─────────────────────────────────────────────────────────
+  const p = Math.round(f.fatigue.p * 100);
+  document.getElementById('fatPct').textContent      = p + '%';
+  document.getElementById('fatDecision').textContent = f.fatigue.decision;
+  document.getElementById('fatBar').style.width      = p + '%';
+  const sev = f.fatigue.severity;
+  const sevLabels = _cbMode ? SEV_LABELS.cb : SEV_LABELS.normal;
+  document.getElementById('fatSev').textContent =
+    'severity: ' + (sevLabels[sev] || sev);
+
+  // ── risk ─────────────────────────────────────────────────────────────
+  document.getElementById('riskScore').textContent    = Math.round(f.risk_score.score);
+  document.getElementById('riskBar').style.width      = f.risk_score.score + '%';
+  document.getElementById('riskFormula').textContent  = f.risk_score.formula;
+
+  // ── zone pills ───────────────────────────────────────────────────────
+  ['zGREEN','zAMBER','zRED'].forEach(id =>
+    document.getElementById(id).classList.remove('on'));
+  const activeZoneId = { GREEN:'zGREEN', AMBER:'zAMBER', RED:'zRED' }[f.zone];
+  if (activeZoneId) document.getElementById(activeZoneId).classList.add('on');
+  document.getElementById('mSpeed').textContent = f.machine.speed + ' m/s';
+  document.getElementById('mRev').textContent   = f.machine.reversing ? 'YES ⚠' : 'no';
+
+  // ── tilt ─────────────────────────────────────────────────────────────
+  document.getElementById('tiltDeg').textContent    = f.tilt.tilt_angle + '°';
+  document.getElementById('tiltStatus').textContent = 'status: ' + f.tilt.status;
+
+  // ── banner — colour escalates by level ───────────────────────────────
+  const b   = document.getElementById('banner');
+  const lvl = f.alert.level;
+  b.setAttribute('data-level', lvl);
+  b.classList.remove('flash');
+
+  let bannerText = lvl === 0 ? '✓ ALL CLEAR' : `LEVEL ${lvl} · ${f.alert.label.toUpperCase()}`;
+  if (_cbMode && lvl === 3) bannerText = `⛔ ${bannerText}`;
+  b.textContent = bannerText;
+
+  if (f.alert.delivery && f.alert.delivery.flash){
+    void b.offsetWidth; b.classList.add('flash');
+  }
+
+  // ── reason card ──────────────────────────────────────────────────────
+  const rc = document.getElementById('reason');
+  if (f.reason_card){
+    let html = `<div class="t">${f.reason_card.title}</div><div>${f.reason_card.detail}</div>`;
+    (f.reason_card.factors||[]).forEach(x => {
+      html += `<div class="factor">• ${x.label||x.feature}: ${x.value} (${x.direction})</div>`;
+    });
+    html += `<div class="factor" style="margin-top:6px">tier: ${f.alert.tier} · source: ${f.reason_card.source}</div>`;
+    rc.innerHTML = html;
+  } else {
+    rc.innerHTML = '<span class="muted">No active alert.</span>';
+  }
+
+  // ── context risk — static demo placeholder (CONTEXT_RISK_DEMO) ──────
+  // Real model output from context_risk_api should replace this block.
+  // The badge HTML is already set in markup; only update colour in cb mode.
+  const cb = document.getElementById('ctxBadge');
+  cb.style.background = _cbMode ? '#1a3a00' : '#5a3a00';
+  cb.style.color = '#fff';
+  // If server sends a real context_risk, prefer it over the demo placeholder
+  if (f.context_risk && f.context_risk.score !== null) {
+    cb.innerHTML =
+      `<span class="ctx-level">${f.context_risk.bucket}</span>` +
+      `<span class="ctx-sub">score: ${f.context_risk.score}</span>`;
+    cb.style.background = f.context_risk.color;
+  }
+
+  if (lvl >= 2) refreshTimeline();
 }
 
+// ── Timeline refresh ─────────────────────────────────────────────────────
 async function refreshTimeline(){
-  const items=await (await fetch('/api/timeline')).json();
-  const ul=document.getElementById('timeline');
-  if(!items.length){ ul.innerHTML='<li class="muted">No incidents yet.</li>'; return; }
-  ul.innerHTML=items.map(e=>{
-    const time=new Date(e.ts*1000).toLocaleTimeString();
+  const items = await (await fetch('/api/timeline')).json();
+  const ul = document.getElementById('timeline');
+  if (!items.length){ ul.innerHTML='<li class="muted">No incidents yet.</li>'; return; }
+  ul.innerHTML = items.map(e => {
+    const time = new Date(e.ts*1000).toLocaleTimeString();
     return `<li><span class="lv">L${e.level}</span> ${e.title}
             <div class="muted">${time} · ${e.operator} · risk ${e.risk_score}</div></li>`;
   }).join('');

@@ -80,16 +80,28 @@ class FatigueEngine:
             from fatigue_monitor import FatigueMonitor, calibrate
 
             baseline = calibrate(rows)
-            # smooth_window=5 (~7.5 s) keeps the live display responsive; the
-            # default of 30 (45 s) makes it too sluggish to show face changes.
-            self._monitor = FatigueMonitor(baseline, smooth_window=5)
+            # smooth_window=3 (~4.5 s): fast enough to show recovery when eyes open;
+            # minimum safe value — below 3 a single long blink would false-alarm.
+            self._monitor = FatigueMonitor(baseline, smooth_window=3)
             self.backend = "xgboost"
 
             # Diagnostic: print the baseline so we can verify calibration worked.
             _src = "WEBCAM" if calibration_rows else "SYNTHETIC-FALLBACK"
-            print(f"[FatigueEngine] Baseline ({_src}, {len(rows)} rows):", file=sys.stderr, flush=True)
-            for feat, stats in baseline.items():
-                print(f"  {feat}: mean={stats['mean']:.4f} std={stats['std']:.4f}",
+            print(f"[FatigueEngine] Baseline ({_src}, {len(rows)} rows):",
+                  file=sys.stderr, flush=True)
+            _bl = baseline  # shorthand for sanity-flag checks below
+            for feat, stats in _bl.items():
+                _flag = ""
+                if feat == "blink_rate":
+                    if stats["std"] < 0.5:
+                        _flag = "  ⚠ FLAG: std near-zero — blink_rate was nearly constant during calib!"
+                    if stats["mean"] < 2.0:
+                        _flag += "  ⚠ FLAG: mean implausibly low — held still during calibration?"
+                if feat == "perclos" and stats["mean"] > 0.20:
+                    _flag = f"  ⚠ FLAG: PERCLOS mean={stats['mean']:.3f} — calibration captured DROWSY state, NOT alert!"
+                if feat == "ear_mean" and stats["mean"] < 0.20:
+                    _flag = f"  ⚠ FLAG: ear_mean mean={stats['mean']:.3f} — eyes looked mostly closed during calibration!"
+                print(f"  {feat}: mean={stats['mean']:.4f} std={stats['std']:.4f}{_flag}",
                       file=sys.stderr, flush=True)
         except Exception as exc:  # noqa: BLE001 — degrade gracefully
             self._err = str(exc)
@@ -100,24 +112,72 @@ class FatigueEngine:
     # ── public ──────────────────────────────────────────────────────────
     def update(self, features: Dict[str, float]) -> dict:
         if self._monitor is not None:
-            # Log normalized features (what the model actually sees after
-            # (raw - baseline_mean) / baseline_std).
-            try:
-                bl = self._monitor.baseline
-                norm_vals = {
-                    f: (features.get(f, math.nan) - bl[f]["mean"]) / (bl[f]["std"] + 1e-6)
-                    for f in FEATURES
-                }
-                _nan_n = sum(1 for v in norm_vals.values() if math.isnan(v))
-                _nstr = " ".join(f"{k}={v:.2f}" for k, v in norm_vals.items())
-                print(f"  NORM[NaNs={_nan_n}]: {_nstr}", file=sys.stderr, flush=True)
-            except Exception:
-                pass
+            bl = self._monitor.baseline
+
+            # ── Step-1 instrumentation ───────────────────────────────────────
+            # 1. Key raw live features
+            br_raw   = features.get("blink_rate", math.nan)
+            pc_raw   = features.get("perclos",    math.nan)
+            ear_raw  = features.get("ear_mean",   math.nan)
+            yawn_raw = features.get("is_yawn",    math.nan)
+            eyes_open = ear_raw >= 0.20 and pc_raw < 0.30
+
+            # 2. Normalized values the model sees
+            norm_vals = {
+                f: (features.get(f, math.nan) - bl[f]["mean"]) / (bl[f]["std"] + 1e-6)
+                for f in FEATURES
+            }
+            _nan_n = sum(1 for v in norm_vals.values() if math.isnan(v))
+
+            # 3. Smoothing buffer info (before this window is appended)
+            _buf_len   = self._monitor.window_count
+            _buf_limit = self._monitor._buffer.maxlen
+            _buf_sec   = _buf_len * 1.5
+
+            print(
+                f"  [FATIGUE-DIAG] "
+                f"EYES={'OPEN' if eyes_open else 'CLOSED'} "
+                f"EAR={ear_raw:.3f} blink_rate={br_raw:.1f} perclos={pc_raw:.3f} is_yawn={yawn_raw:.0f} "
+                f"| buf={_buf_len}/{_buf_limit} ({_buf_sec:.1f}s) | NaNs={_nan_n}",
+                file=sys.stderr, flush=True,
+            )
+            # Baseline for the two most diagnostic features
+            print(
+                f"  [BASELINE]    "
+                f"blink_rate mean={bl['blink_rate']['mean']:.2f} std={bl['blink_rate']['std']:.2f}  "
+                f"perclos   mean={bl['perclos']['mean']:.3f}  std={bl['perclos']['std']:.3f}",
+                file=sys.stderr, flush=True,
+            )
+            # Key normalized values (what the model actually receives)
+            print(
+                f"  [NORM]        "
+                f"blink_rate={norm_vals.get('blink_rate', float('nan')):.2f}  "
+                f"perclos={norm_vals.get('perclos', float('nan')):.2f}  "
+                f"ear_mean={norm_vals.get('ear_mean', float('nan')):.2f}  "
+                f"is_yawn={norm_vals.get('is_yawn', float('nan')):.2f}",
+                file=sys.stderr, flush=True,
+            )
+            # ─────────────────────────────────────────────────────────────────
 
             res = self._monitor.update(features)
+
+            # 4. Raw vs smoothed P side-by-side + SHAP top drivers
+            print(
+                f"  [P]           "
+                f"raw={res.get('p_raw', float('nan')):.4f}  "
+                f"smooth={res['p_at_risk']:.4f}  "
+                f"decision={res['decision']}  severity={res['severity']}",
+                file=sys.stderr, flush=True,
+            )
+            if res.get("reasons"):
+                _top = res["reasons"][:3]
+                # reasons from FatigueMonitor are TUPLES (feature, value, direction)
+                _rstr = "  ".join(f"{feat}={val}({dr})" for (feat, val, dr) in _top)
+                print(f"  [SHAP-TOP3]   {_rstr}", file=sys.stderr, flush=True)
+
             res["reasons"] = [
-                {"feature": f, "value": round(float(v), 3), "direction": dr}
-                for (f, v, dr) in res["reasons"]
+                {"feature": feat, "value": round(float(val), 3), "direction": dr}
+                for (feat, val, dr) in res["reasons"]
             ]
             return res
         return self._fallback_update(features)

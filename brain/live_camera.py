@@ -211,9 +211,43 @@ class BackgroundCameraTracker:
             rows = self._calibrate_once(seconds)
 
             if rows:
-                print(f"[Calibration] SUCCESS — {len(rows)} valid face windows collected.",
+                # Sanity-check the baseline before accepting it.
+                # These limits detect a drowsy/eyes-closed calibration state.
+                _pc_mean  = sum(r.get("perclos", 0.0) for r in rows) / len(rows)
+                _ear_mean = sum(r.get("ear_mean", 0.0) for r in rows) / len(rows)
+                _br_mean  = sum(r.get("blink_rate", 0.0) for r in rows) / len(rows)
+
+                print(f"[Calibration] Sanity check — "
+                      f"perclos_mean={_pc_mean:.3f}  ear_mean={_ear_mean:.3f}  blink_rate_mean={_br_mean:.1f}",
                       flush=True)
-                return rows
+
+                _bad = []
+                if _pc_mean > 0.20:
+                    _bad.append(f"perclos mean={_pc_mean:.3f} > 0.20 (eyes were mostly closed!")
+                if _ear_mean < 0.20:
+                    _bad.append(f"ear_mean mean={_ear_mean:.3f} < 0.20 (eyes too closed)")
+
+                if not _bad:
+                    print(f"[Calibration] SANITY OK — {len(rows)} valid alert windows accepted.",
+                          flush=True)
+                    return rows
+
+                # Bad baseline — show exactly what was wrong and retry.
+                _SEP2 = "!" * 64
+                print(f"\n{_SEP2}", flush=True)
+                print("!  CALIBRATION REJECTED — BASELINE LOOKS DROWSY              !", flush=True)
+                for _b in _bad:
+                    print(f"!    >> {_b}", flush=True)
+                print("!                                                               !", flush=True)
+                print("!  During calibration you must look RELAXED but AWAKE:          !", flush=True)
+                print("!    • Keep eyes OPEN and blinking NORMALLY (not staring)       !", flush=True)
+                print("!    • Face camera squarely, good light, no strong backlight    !", flush=True)
+                print("!    • Do NOT hold your eyes extra-wide (causes low perclos     !", flush=True)
+                print("!      but then live perclos looks high by comparison)          !", flush=True)
+                print(f"{_SEP2}\n", flush=True)
+                print("[Calibration] Retrying in 3 s...  (Ctrl-C to abort)\n", flush=True)
+                time.sleep(3)
+                # loop repeats
 
             # No face detected in this pass — refuse synthetic, force a retry.
             _SEP = "!" * 64
@@ -432,6 +466,7 @@ class BackgroundCameraTracker:
                                 "yaw_mean":   row["yaw_mean"],
                                 "roll_mean":  row["roll_mean"],
                                 "pitch_std":  row["pitch_std"],
+                                "is_warming_up": float(window_idx < 3),
                             }
                             with self._lock:
                                 self.latest_features = candidate

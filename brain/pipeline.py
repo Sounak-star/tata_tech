@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import math
 import sys
-from typing import Optional
+from typing import Dict, List, Optional
 
 from .engine import HybridDecisionEngine
 from .fatigue import FatigueEngine, synth_window
@@ -37,7 +37,7 @@ class Brain:
 
     def __init__(self, store: Optional[ProfileStore] = None,
                  event_log: Optional[EventLog] = None,
-                 calibration_rows: Optional[list[dict]] = None) -> None:
+                 calibration_rows: Optional[List[Dict]] = None) -> None:
         self.store = store or ProfileStore()
         self.faceid = FaceID(self.store)
         self.fatigue = FatigueEngine(calibration_rows)
@@ -46,6 +46,9 @@ class Brain:
         self.log = event_log or EventLog()
         self.context = _load_context_risk()
         self._tick = 0
+        # Timeline throttle: track previous alert level to detect onset transitions only.
+        # An entry is written ONCE per rising edge (level > _prev_level), not every tick.
+        self._prev_level = 0
 
     def switch_operator(self, operator_id: str) -> dict:
         prof = self.store.switch(operator_id)
@@ -62,6 +65,16 @@ class Brain:
         feat_src = "camera" if raw_feats is not None else "demo-synth"
         features = raw_feats if raw_feats is not None else synth_window(signal.get("drowsiness", 0.0))
         fatigue = self.fatigue.update(features)
+
+        # ── Warm-up Guard ────────────────────────────────────────────────────
+        # Suppress spurious fatigue spikes when the camera trailing buffer is empty.
+        is_warming_up = raw_feats is not None and raw_feats.get("is_warming_up", 0.0) > 0.5
+        if is_warming_up:
+            fatigue["p_at_risk"] = 0.0
+            fatigue["p_raw"] = 0.0
+            fatigue["decision"] = "INITIALIZING"
+            fatigue["severity"] = "calibrating sensor"
+        # ─────────────────────────────────────────────────────────────────────
 
         # ── Per-tick diagnostic log ──────────────────────────────────────────
         _nan_ct = sum(1 for v in features.values() if isinstance(v, float) and math.isnan(v))
@@ -107,8 +120,10 @@ class Brain:
         delivery = personalise(level, profile)
         card = build_reason_card(level, tier, decision["reason"], fatigue, zone_name, tinfo)
 
-        if level >= 2:
+        # Throttle: log only on upward level transition (onset), not every tick.
+        if level >= 2 and level > self._prev_level:
             self.log.log(profile["id"], level, tier, card, risk["score"])
+        self._prev_level = level
 
         return {
             "tick": self._tick,
@@ -135,7 +150,7 @@ class Brain:
 def _load_context_risk() -> dict:
     """Dev 3 context-risk badge for the supervisor view (best-effort)."""
     try:
-        from context_risk_api import get_context_risk
+        from context_risk_api import get_context_risk  # type: ignore[import]
 
         r = get_context_risk(machine_type="Excavator", task_type="Excavation",
                              time_of_day="Morning", weather_condition="Clear/Unknown")
