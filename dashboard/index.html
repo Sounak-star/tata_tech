@@ -15,6 +15,10 @@
     --lvl1-bg:#0d2137; --lvl1-txt:#29b6f6;
     --lvl2-bg:#3a2600; --lvl2-txt:#ffb300;
     --lvl3-bg:#3b0a0a; --lvl3-txt:#f85149;
+    /* Full-screen flash overlay colours (sighted) */
+    --buzz-lvl2: rgba(255,179,0, 0.18);
+    --buzz-lvl3: rgba(248,81,73, 0.30);
+    --buzz-lvl3-border: #f85149;
   }
 
   /* ── Colour-blind-safe overrides (active when <html data-cb="1">) ─ */
@@ -26,6 +30,10 @@
     --lvl1-bg:#1a2a00; --lvl1-txt:#aed581;
     --lvl2-bg:#3a1f00; --lvl2-txt:#ffa726;
     --lvl3-bg:#3a1f00; --lvl3-txt:#ffa726;
+    /* CB-safe flash colours: amber/orange, never red */
+    --buzz-lvl2: rgba(255,167,38, 0.22);
+    --buzz-lvl3: rgba(230,81,0,   0.35);
+    --buzz-lvl3-border: #ffa726;
   }
 
   /* ── Base ───────────────────────────────────────────────────────── */
@@ -53,7 +61,6 @@
     font-size:26px; font-weight:700; text-align:center; padding:18px;
     border-radius:10px; transition:background .3s, color .3s;
   }
-  /* Level-specific colouring driven by data-level attribute */
   .banner[data-level="0"] { background:var(--lvl0-bg); color:var(--lvl0-txt); }
   .banner[data-level="1"] { background:var(--lvl1-bg); color:var(--lvl1-txt); }
   .banner[data-level="2"] { background:var(--lvl2-bg); color:var(--lvl2-txt); }
@@ -84,7 +91,6 @@
     font-size:12px; background:#21262d; opacity:.35; font-weight:600;
   }
   .zone span.on { opacity:1; }
-  /* Zone colours driven by CSS var — auto-adapts to cb palette */
   #zGREEN { color:var(--green); }
   #zAMBER { color:var(--amber); }
   #zRED   { color:var(--red);   }
@@ -113,10 +119,9 @@
   }
   #camPreview {
     width:100%; display:block;
-    object-fit:contain;          /* never crop the EAR/FATIGUE overlay text */
+    object-fit:contain;
     background:#000;
     border-radius:0 0 8px 8px;
-    /* Let the image define its natural height — no empty black void */
     max-height:360px;
   }
 
@@ -129,9 +134,87 @@
   /* ── Active operator button highlight ───────────────────────────── */
   .op-btn.active { border-color:var(--blue) !important;
                    background:#0d2137 !important; }
+
+  /* ══════════════════════════════════════════════════════════════════
+     BUZZ OVERLAY — full-screen visual alert for Level 2 and Level 3
+     ══════════════════════════════════════════════════════════════════ */
+  #buzzOverlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;   /* never blocks clicks */
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.15s;
+    border: 0px solid transparent;
+  }
+  /* Level 2 — amber pulse */
+  #buzzOverlay[data-buzz="2"] {
+    opacity: 1;
+    background: var(--buzz-lvl2);
+    animation: buzz-amber 1.8s ease-in-out infinite;
+  }
+  @keyframes buzz-amber {
+    0%,100%{ box-shadow:inset 0 0 0 0 rgba(255,179,0,0);   border-width:0; }
+    50%     { box-shadow:inset 0 0 60px 10px rgba(255,179,0,.25); border:6px solid #ffb300; }
+  }
+  /* Level 3 — bold red/orange full-screen flash */
+  #buzzOverlay[data-buzz="3"] {
+    opacity: 1;
+    background: var(--buzz-lvl3);
+    border: 6px solid var(--buzz-lvl3-border);
+    animation: buzz-red 0.9s ease-in-out infinite;
+  }
+  @keyframes buzz-red {
+    0%,100%{ opacity:0.9; border-width:6px; }
+    50%     { opacity:0.3; border-width:14px; }
+  }
+  /* Inactive — hidden */
+  #buzzOverlay[data-buzz="0"],
+  #buzzOverlay[data-buzz="1"],
+  #buzzOverlay:not([data-buzz]) {
+    opacity: 0;
+    animation: none;
+    border-width: 0;
+  }
+
+  /* ── Sound unlock banner ────────────────────────────────────────── */
+  #soundUnlock {
+    position: fixed;
+    bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 10000;
+    background: #1f6feb; color: #fff;
+    padding: 10px 22px; border-radius: 24px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    display: none;
+  }
+
+  /* ── Test Alert button ──────────────────────────────────────────── */
+  #testAlertBtn {
+    margin-top: 14px;
+    width: 100%;
+    padding: 8px;
+    background: #5a3a00;
+    color: #ffb300;
+    border: 1px solid #ffb300;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: background .15s;
+  }
+  #testAlertBtn:hover { background: #7a5000; }
+  #testAlertBtn:disabled { opacity:.5; cursor:default; }
 </style>
 </head>
 <body>
+
+<!-- ══════════════ BUZZ OVERLAY — sits over the whole page ══════════════ -->
+<div id="buzzOverlay" data-buzz="0" aria-live="assertive" aria-atomic="true"></div>
+
+<!-- ══════════════ SOUND UNLOCK BUTTON ══════════════ -->
+<button id="soundUnlock">🔔 Tap to enable alert sound</button>
+
 <header>
   <h1>🛠 SAARTHI · SmartCabin AI Copilot</h1>
   <div class="status">
@@ -170,6 +253,11 @@
         <span class="ctx-sub">Urban construction · clear · daytime</span>
       </span>
     </div>
+
+    <!-- ══ TEST ALERT BUTTON ══ -->
+    <button id="testAlertBtn" onclick="triggerTestAlert()">
+      🧪 Test Alert (Level 3, 4 s)
+    </button>
   </section>
 
   <!-- Center: live state -->
@@ -184,7 +272,7 @@
         <div class="gauge"><div id="fatBar" style="background:var(--amber)"></div></div>
         <div class="muted" id="fatSev"></div>
       </div>
-      <!-- Camera preview — contain keeps overlay text fully visible -->
+      <!-- Camera preview -->
       <div class="card" id="camWrap">
         <h2 style="padding:10px 14px 6px; margin:0;">Camera preview</h2>
         <img id="camPreview" src="/video_feed"
@@ -220,7 +308,6 @@
       <div class="card">
         <h2>Blind-spot zone</h2>
         <div class="zone">
-          <!-- Icon labels shown in cb-safe mode via JS -->
           <span id="zGREEN">GREEN</span>
           <span id="zAMBER">AMBER</span>
           <span id="zRED">RED</span>
@@ -264,11 +351,120 @@ const SEV_LABELS = {
 let ws;
 let _cbMode = false;   // tracks current colour-blind state
 
+// ════════════════════════════════════════════════════════════════════
+// BUZZ SYSTEM
+// ════════════════════════════════════════════════════════════════════
+
+// ── Web Audio API for Level-3 beep (requires a prior user gesture) ──
+let _audioCtx = null;
+let _audioUnlocked = false;
+let _beepInterval = null;
+let _testAlertTimer = null;
+let _testActive = false;
+
+// Show the "Tap to enable sound" button until user interacts
+const _soundUnlockBtn = document.getElementById('soundUnlock');
+_soundUnlockBtn.style.display = 'block';
+_soundUnlockBtn.addEventListener('click', () => {
+  unlockAudio();
+  _soundUnlockBtn.style.display = 'none';
+}, { once: true });
+// Also auto-unlock on any body interaction
+document.body.addEventListener('click', unlockAudio, { once: true });
+document.body.addEventListener('keydown', unlockAudio, { once: true });
+
+function unlockAudio() {
+  if (_audioUnlocked) return;
+  _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  _audioUnlocked = true;
+  _soundUnlockBtn.style.display = 'none';
+}
+
+/**
+ * Play a short buzz/beep tone.
+ * Frequency 440 Hz for sighted mode, 660 Hz for CB (slightly different
+ * so hearing-impaired users who also have assistive tech get variation).
+ */
+function playBeep() {
+  if (!_audioUnlocked || !_audioCtx) return;
+  const osc = _audioCtx.createOscillator();
+  const gain = _audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(_audioCtx.destination);
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(_cbMode ? 660 : 440, _audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.18, _audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, _audioCtx.currentTime + 0.35);
+  osc.start(_audioCtx.currentTime);
+  osc.stop(_audioCtx.currentTime + 0.35);
+}
+
+/**
+ * Core buzz driver — called every render tick.
+ * level: 0–3 (the actual or simulated alert level)
+ * isHearingImpaired: if true, skip sound (visual is primary)
+ */
+let _currentBuzzLevel = 0;
+
+function setBuzz(level, isHearingImpaired) {
+  const overlay = document.getElementById('buzzOverlay');
+
+  if (level === _currentBuzzLevel) return; // no change, skip flicker
+  _currentBuzzLevel = level;
+
+  // Update overlay
+  overlay.setAttribute('data-buzz', String(level));
+
+  // Add CB danger icon to overlay text for level 3
+  if (level === 3) {
+    overlay.textContent = _cbMode ? '⛔' : '';
+  } else {
+    overlay.textContent = '';
+  }
+
+  // Sound: Level 3 only, not for hearing-impaired operator
+  if (_beepInterval) { clearInterval(_beepInterval); _beepInterval = null; }
+  if (level === 3 && !isHearingImpaired) {
+    playBeep(); // immediate first beep
+    _beepInterval = setInterval(playBeep, 2500);
+  }
+}
+
+// ── Manual Test Alert ─────────────────────────────────────────────────────
+function triggerTestAlert() {
+  if (_testActive) return;
+  _testActive = true;
+  const btn = document.getElementById('testAlertBtn');
+  btn.disabled = true;
+  btn.textContent = '⏱ Testing… (4 s)';
+
+  // Force overlay to Level 3 immediately
+  setBuzz(3, false); // always play sound in test mode
+
+  // Briefly override the banner for clarity
+  const banner = document.getElementById('banner');
+  const prevLevel = banner.getAttribute('data-level');
+  const prevText  = banner.textContent;
+  banner.setAttribute('data-level', '3');
+  banner.textContent = _cbMode ? '⛔ TEST · LEVEL 3 EMERGENCY' : '🚨 TEST · LEVEL 3 EMERGENCY';
+
+  _testAlertTimer = setTimeout(() => {
+    // Restore real state
+    _testActive = false;
+    setBuzz(0, false);
+    banner.setAttribute('data-level', prevLevel);
+    banner.textContent = prevText;
+    btn.disabled = false;
+    btn.textContent = '🧪 Test Alert (Level 3, 4 s)';
+  }, 4000);
+}
+
+// ════════════════════════════════════════════════════════════════════
+
 // ── Colour-blind mode toggle ─────────────────────────────────────────────
 function setCbMode(enabled) {
   _cbMode = enabled;
   document.documentElement.setAttribute('data-cb', enabled ? '1' : '0');
-  // Update zone pill text
   const labels = enabled ? ZONE_LABELS.cb : ZONE_LABELS.normal;
   document.getElementById('zGREEN').textContent = labels.GREEN;
   document.getElementById('zAMBER').textContent = labels.AMBER;
@@ -316,7 +512,9 @@ function render(f){
   document.getElementById('opName').textContent = op.name;
   document.getElementById('opRole').textContent = op.role;
 
-  const isColourBlind = op.color_vision !== 'normal';
+  const isColourBlind    = op.color_vision !== 'normal';
+  const isHearingImpaired = op.hearing === 'impaired';
+
   // Drive cb-safe mode from the active operator's profile
   if (isColourBlind !== _cbMode) setCbMode(isColourBlind);
 
@@ -332,8 +530,8 @@ function render(f){
   }
 
   const tags = [`🌐 ${op.language}`, `🎓 ${op.experience}`];
-  if (op.hearing === 'impaired')    tags.push('🦻 hearing-impaired');
-  if (op.color_vision !== 'normal') tags.push('🎨 colour-blind');
+  if (isHearingImpaired)  tags.push('🦻 hearing-impaired');
+  if (isColourBlind)      tags.push('🎨 colour-blind');
   document.getElementById('opTags').innerHTML =
     tags.map(t => `<span class="tag">${t}</span>`).join('');
 
@@ -378,6 +576,11 @@ function render(f){
     void b.offsetWidth; b.classList.add('flash');
   }
 
+  // ══ BUZZ OVERLAY — drive from real alert level (skip if test is active) ══
+  if (!_testActive) {
+    setBuzz(lvl, isHearingImpaired);
+  }
+
   // ── reason card ──────────────────────────────────────────────────────
   const rc = document.getElementById('reason');
   if (f.reason_card){
@@ -392,12 +595,9 @@ function render(f){
   }
 
   // ── context risk — static demo placeholder (CONTEXT_RISK_DEMO) ──────
-  // Real model output from context_risk_api should replace this block.
-  // The badge HTML is already set in markup; only update colour in cb mode.
   const cb = document.getElementById('ctxBadge');
   cb.style.background = _cbMode ? '#1a3a00' : '#5a3a00';
   cb.style.color = '#fff';
-  // If server sends a real context_risk, prefer it over the demo placeholder
   if (f.context_risk && f.context_risk.score !== null) {
     cb.innerHTML =
       `<span class="ctx-level">${f.context_risk.bucket}</span>` +
