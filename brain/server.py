@@ -24,6 +24,7 @@ from . import paths
 from .demo_source import DemoSource, HybridLiveSource
 from .pipeline import Brain
 from .live_camera import BackgroundCameraTracker, HAS_MEDIAPIPE
+from .blindspot import BackgroundBlindspotTracker
 
 TICK_HZ = 6.0  # readable playback rate for the demo (raise toward 10 for "live")
 CAMERA_INDEX = 0  # Configurable camera index
@@ -32,10 +33,12 @@ app = FastAPI(title="SAARTHI — SmartCabin AI Copilot")
 
 if HAS_MEDIAPIPE:
     tracker = BackgroundCameraTracker(camera_index=CAMERA_INDEX)
+    blindspot_tracker = BackgroundBlindspotTracker()
     brain = Brain()  # Will be re-initialized after calibration
-    source = HybridLiveSource(DemoSource(), tracker)
+    source = HybridLiveSource(DemoSource(), tracker, blindspot_tracker)
 else:
     tracker = None
+    blindspot_tracker = BackgroundBlindspotTracker()
     brain = Brain()
     source = DemoSource()
 
@@ -110,6 +113,32 @@ async def video_feed() -> StreamingResponse:
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
+@app.get("/blindspot_feed")
+async def blindspot_feed() -> StreamingResponse:
+    """MJPEG stream of the annotated blind-spot clip."""
+    if not getattr(blindspot_tracker, "is_available", False):
+        return JSONResponse({"error": "blind-spot tracker not available"}, status_code=503)
+
+    async def _gen():
+        while True:
+            jpeg = blindspot_tracker.get_latest_annotated_frame()
+            if jpeg is not None:
+                chunk = (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n"
+                    + f"Content-Length: {len(jpeg)}\r\n\r\n".encode()
+                    + jpeg
+                    + b"\r\n"
+                )
+                yield chunk
+            await asyncio.sleep(1.0 / 20.0)
+
+    return StreamingResponse(
+        _gen(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
 
 async def _calibrate_and_start_camera():
     if HAS_MEDIAPIPE:
@@ -128,12 +157,14 @@ async def _calibrate_and_start_camera():
 
 @app.on_event("startup")
 async def _startup() -> None:
+    blindspot_tracker.start()
     asyncio.create_task(_calibrate_and_start_camera())
     asyncio.create_task(_loop())
 
 
 @app.on_event("shutdown")
 async def _shutdown() -> None:
+    blindspot_tracker.stop()
     if HAS_MEDIAPIPE:
         tracker.stop()  # signals the thread and calls cap.release()
 
@@ -162,6 +193,13 @@ def api_switch(operator_id: str) -> JSONResponse:
     except KeyError:
         return JSONResponse({"ok": False, "error": "unknown operator"}, status_code=404)
 
+@app.post("/api/trigger_blindspot")
+def api_trigger_blindspot() -> JSONResponse:
+    if blindspot_tracker and getattr(blindspot_tracker, "is_available", False):
+        blindspot_tracker.trigger_blindspot()
+        return JSONResponse({"ok": True})
+    return JSONResponse({"ok": False, "error": "Tracker unavailable"}, status_code=503)
+
 
 @app.get("/api/timeline")
 def api_timeline() -> JSONResponse:
@@ -170,10 +208,11 @@ def api_timeline() -> JSONResponse:
 
 @app.get("/api/health")
 def api_health() -> JSONResponse:
+    person_backend = "YOLO11n (live detection)" if getattr(blindspot_tracker, "is_available", False) else brain.persons.backend
     return JSONResponse({
         "ok": True,
         "fatigue_backend": brain.fatigue.backend,
-        "person_backend": brain.persons.backend,
+        "person_backend": person_backend,
         "faceid_backend": brain.faceid.backend,
         "tick_hz": TICK_HZ,
     })

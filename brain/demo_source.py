@@ -115,10 +115,12 @@ class HybridLiveSource:
     """
     Wraps DemoSource for simulated phase, zone, tilt, etc.
     But uses real live features from BackgroundCameraTracker instead of drowsiness.
+    Also uses BackgroundBlindspotTracker for zone and reversing if available.
     """
-    def __init__(self, demo_source: DemoSource, camera_tracker):
+    def __init__(self, demo_source: DemoSource, camera_tracker, blindspot_tracker=None):
         self.demo_source = demo_source
         self.camera_tracker = camera_tracker
+        self.blindspot_tracker = blindspot_tracker
 
     def step(self) -> Dict:
         signal = self.demo_source.step()
@@ -131,6 +133,17 @@ class HybridLiveSource:
         latest = self.camera_tracker.get_latest_features()
         if latest is not None:
             signal["features"] = latest
+            
+        if self.blindspot_tracker and getattr(self.blindspot_tracker, "is_available", False):
+            # The blind-spot tracker is running on the clip.
+            # Replace the scripted zone with the real YOLO zone.
+            signal["zone"] = self.blindspot_tracker.get_latest_zone()
+            
+            # If the manual trigger activated reversing, override the demo script.
+            if self.blindspot_tracker.get_is_reversing():
+                signal["is_reversing"] = 1
+                signal["machine_speed"] = max(float(signal.get("machine_speed", 0.0)), 0.6)
+
         return signal
 
     def __iter__(self) -> Iterator[Dict]:
