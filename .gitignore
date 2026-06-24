@@ -21,5 +21,3 @@ training/**/*.tfevents.*
 
 # Downloaded models
 face_landmarker.task
-data/blindspot_clip.mp4
-samplevideo.mp4  
