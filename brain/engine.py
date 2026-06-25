@@ -19,12 +19,30 @@ from __future__ import annotations
 
 from typing import Optional
 
-from . import paths  # noqa: F401 — ensures Pipeline B is importable
+import numpy as np
+
+from . import paths
 
 from env.state_space import OperatorState
 from env.action_space import InterventionAction
 from policies.adaptive_fallback import AdaptiveFallbackPolicy
 from policies.intervention_logic import RuleBasedInterventionLogic
+
+PPO_MODEL_PATH = paths.PIPELINE_B / "models" / "ppo_intervention_policy.zip"
+
+
+def _load_ppo():
+    """Load the trained PPO policy, or None if SB3/model unavailable.
+
+    Trained on cabin_env.py's observation space (raw live signals), NOT the
+    OperatorState vector — see _build_obs below.
+    """
+    try:
+        from stable_baselines3 import PPO
+        return PPO.load(str(PPO_MODEL_PATH), device="cpu")  # edge inference = CPU
+    except Exception as exc:  # missing dep, missing file, version skew
+        print(f"[engine] PPO unavailable ({exc}); using adaptive fallback.")
+        return None
 
 TICKS_PER_SECOND = 6   # matches server.py TICK_HZ so hard-rule fires at true 2 s
 FATIGUE_CRITICAL = 0.85
@@ -47,6 +65,7 @@ class HybridDecisionEngine:
         self.tps = ticks_per_second
         self.fallback = AdaptiveFallbackPolicy()
         self.logic = RuleBasedInterventionLogic()
+        self.model = _load_ppo()
         self._fatigue_critical_ticks = 0
         self._last_action = InterventionAction.NO_ACTION
 
@@ -101,15 +120,28 @@ class HybridDecisionEngine:
                 "thresholds": self.fallback.get_thresholds(),
             }
 
-        # Tier 2 — adaptive soft policy. Translate live signals to OperatorState.
-        state = OperatorState(
-            fatigue_score=fatigue_p,
-            attention_score=float(1.0 - min(1.0, zone / 2.0)),
-            hazard_risk=float(min(1.0, zone / 2.0)),
-            obstacle_distance=float(40.0 * (1.0 - min(1.0, zone / 2.0)) + 2.0),
-            operator_response_rate=0.7,
-        )
-        action = self.logic.choose_action(state, self.fallback)
+        # Tier 2 — the trained PPO brain owns Levels 0–2.
+        if self.model is not None:
+            # Observation = the raw live signals, in the exact order/scale the
+            # model saw in cabin_env.py: [fatigue, zone(0-2), speed, tilt, rev].
+            obs = np.array(
+                [fatigue_p, float(zone), machine_speed, tilt, float(is_reversing)],
+                dtype=np.float32,
+            )
+            raw, _ = self.model.predict(obs, deterministic=True)
+            action = InterventionAction(int(raw))
+            tier = "ppo-policy"
+        else:
+            # Fallback: adaptive rule-based policy when the model can't load.
+            state = OperatorState(
+                fatigue_score=fatigue_p,
+                attention_score=float(1.0 - min(1.0, zone / 2.0)),
+                hazard_risk=float(min(1.0, zone / 2.0)),
+                obstacle_distance=float(40.0 * (1.0 - min(1.0, zone / 2.0)) + 2.0),
+                operator_response_rate=0.7,
+            )
+            action = self.logic.choose_action(state, self.fallback)
+            tier = "adaptive-policy"
 
         # Trainees get earlier warnings: floor a soft nudge whenever any hazard
         # signal is present but the policy chose to stay silent.
@@ -121,7 +153,7 @@ class HybridDecisionEngine:
         return {
             "level": int(action),
             "label": LEVEL_LABELS[int(action)],
-            "tier": "adaptive-policy",
+            "tier": tier,
             "reason": "",
             "thresholds": self.fallback.get_thresholds(),
         }
