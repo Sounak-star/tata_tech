@@ -14,7 +14,7 @@
       "blink_rate_baseline": 14.0,
       "calibrated": true
     },
-    "notes": "Hard of hearing — alerts must not rely on sound (buzz + flash)."
+    "notes": "Hard of hearing \u2014 alerts must not rely on sound (buzz + flash)."
   },
   "priya": {
     "id": "priya",
@@ -31,7 +31,7 @@
       "blink_rate_baseline": 16.0,
       "calibrated": true
     },
-    "notes": "Trainee — earlier warnings, simpler UI, fewer gauges."
+    "notes": "Trainee \u2014 earlier warnings, simpler UI, fewer gauges."
   },
   "arjun": {
     "id": "arjun",
@@ -48,6 +48,1995 @@
       "blink_rate_baseline": 13.0,
       "calibrated": true
     },
-    "notes": "Colour-blind (deuteranopia) — use blue/white + icons, never red-vs-green alone."
+    "notes": "Colour-blind (deuteranopia) \u2014 use blue/white + icons, never red-vs-green alone."
+  },
+  "op_001": {
+    "id": "op_001",
+    "name": "Rahul Nair",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_001.jpg",
+    "calibration": {
+      "ear_baseline": 0.307,
+      "perclos_baseline": 0.076,
+      "blink_rate_baseline": 11.6,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_002": {
+    "id": "op_002",
+    "name": "Pooja Verma",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "trainee",
+    "photo": "op_002.jpg",
+    "calibration": {
+      "ear_baseline": 0.299,
+      "perclos_baseline": 0.069,
+      "blink_rate_baseline": 15.9,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_003": {
+    "id": "op_003",
+    "name": "Neha Yadav",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_003.jpg",
+    "calibration": {
+      "ear_baseline": 0.29,
+      "perclos_baseline": 0.051,
+      "blink_rate_baseline": 12.5,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_004": {
+    "id": "op_004",
+    "name": "Ashok Iyengar",
+    "role": "Crane Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_004.jpg",
+    "calibration": {
+      "ear_baseline": 0.302,
+      "perclos_baseline": 0.072,
+      "blink_rate_baseline": 16.1,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+  },
+  "op_005": {
+    "id": "op_005",
+    "name": "Kamlesh Nair",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_005.jpg",
+    "calibration": {
+      "ear_baseline": 0.322,
+      "perclos_baseline": 0.054,
+      "blink_rate_baseline": 12.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_006": {
+    "id": "op_006",
+    "name": "Arvind Verma",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_006.jpg",
+    "calibration": {
+      "ear_baseline": 0.287,
+      "perclos_baseline": 0.058,
+      "blink_rate_baseline": 16.8,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_007": {
+    "id": "op_007",
+    "name": "Madhav Naicker",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_007.jpg",
+    "calibration": {
+      "ear_baseline": 0.305,
+      "perclos_baseline": 0.064,
+      "blink_rate_baseline": 12.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_008": {
+    "id": "op_008",
+    "name": "Sandeep Dubey",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_008.jpg",
+    "calibration": {
+      "ear_baseline": 0.308,
+      "perclos_baseline": 0.049,
+      "blink_rate_baseline": 13.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_009": {
+    "id": "op_009",
+    "name": "Srikant Gupta",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_009.jpg",
+    "calibration": {
+      "ear_baseline": 0.321,
+      "perclos_baseline": 0.053,
+      "blink_rate_baseline": 15.6,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+  },
+  "op_010": {
+    "id": "op_010",
+    "name": "Meera Prasad",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_010.jpg",
+    "calibration": {
+      "ear_baseline": 0.278,
+      "perclos_baseline": 0.063,
+      "blink_rate_baseline": 17.3,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_011": {
+    "id": "op_011",
+    "name": "Meera Naicker",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_011.jpg",
+    "calibration": {
+      "ear_baseline": 0.32,
+      "perclos_baseline": 0.046,
+      "blink_rate_baseline": 12.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_012": {
+    "id": "op_012",
+    "name": "Abhishek Menon",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_012.jpg",
+    "calibration": {
+      "ear_baseline": 0.278,
+      "perclos_baseline": 0.062,
+      "blink_rate_baseline": 17.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_013": {
+    "id": "op_013",
+    "name": "Abhishek Nair",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_013.jpg",
+    "calibration": {
+      "ear_baseline": 0.26,
+      "perclos_baseline": 0.069,
+      "blink_rate_baseline": 16.0,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_014": {
+    "id": "op_014",
+    "name": "Naresh Kumar",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_014.jpg",
+    "calibration": {
+      "ear_baseline": 0.286,
+      "perclos_baseline": 0.046,
+      "blink_rate_baseline": 17.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_015": {
+    "id": "op_015",
+    "name": "Kailash Patel",
+    "role": "Safety Inspector",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_015.jpg",
+    "calibration": {
+      "ear_baseline": 0.329,
+      "perclos_baseline": 0.072,
+      "blink_rate_baseline": 12.7,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_016": {
+    "id": "op_016",
+    "name": "Rohan Mehta",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_016.jpg",
+    "calibration": {
+      "ear_baseline": 0.269,
+      "perclos_baseline": 0.066,
+      "blink_rate_baseline": 17.6,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_017": {
+    "id": "op_017",
+    "name": "Madhav Trivedi",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_017.jpg",
+    "calibration": {
+      "ear_baseline": 0.31,
+      "perclos_baseline": 0.056,
+      "blink_rate_baseline": 15.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_018": {
+    "id": "op_018",
+    "name": "Jyoti Jha",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "trainee",
+    "photo": "op_018.jpg",
+    "calibration": {
+      "ear_baseline": 0.301,
+      "perclos_baseline": 0.049,
+      "blink_rate_baseline": 12.5,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_019": {
+    "id": "op_019",
+    "name": "Arvind Gupta",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "deuteranopia",
+    "language": "en",
+    "experience": "trainee",
+    "photo": "op_019.jpg",
+    "calibration": {
+      "ear_baseline": 0.279,
+      "perclos_baseline": 0.059,
+      "blink_rate_baseline": 14.8,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (deuteranopia) \u2014 high contrast + icons. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_020": {
+    "id": "op_020",
+    "name": "Sandeep Subramanian",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_020.jpg",
+    "calibration": {
+      "ear_baseline": 0.285,
+      "perclos_baseline": 0.056,
+      "blink_rate_baseline": 17.0,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+  },
+  "op_021": {
+    "id": "op_021",
+    "name": "Anil Rao",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_021.jpg",
+    "calibration": {
+      "ear_baseline": 0.277,
+      "perclos_baseline": 0.048,
+      "blink_rate_baseline": 14.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_022": {
+    "id": "op_022",
+    "name": "Pooja Kumar",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_022.jpg",
+    "calibration": {
+      "ear_baseline": 0.267,
+      "perclos_baseline": 0.066,
+      "blink_rate_baseline": 14.8,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_023": {
+    "id": "op_023",
+    "name": "Aarav Mehta",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_023.jpg",
+    "calibration": {
+      "ear_baseline": 0.288,
+      "perclos_baseline": 0.042,
+      "blink_rate_baseline": 13.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_024": {
+    "id": "op_024",
+    "name": "Kavita Trivedi",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "intermediate",
+    "photo": "op_024.jpg",
+    "calibration": {
+      "ear_baseline": 0.315,
+      "perclos_baseline": 0.066,
+      "blink_rate_baseline": 14.4,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_025": {
+    "id": "op_025",
+    "name": "Nikhil Kulkarni",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_025.jpg",
+    "calibration": {
+      "ear_baseline": 0.264,
+      "perclos_baseline": 0.063,
+      "blink_rate_baseline": 14.5,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+  },
+  "op_026": {
+    "id": "op_026",
+    "name": "Murugan Nambiar",
+    "role": "Bulldozer Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_026.jpg",
+    "calibration": {
+      "ear_baseline": 0.302,
+      "perclos_baseline": 0.067,
+      "blink_rate_baseline": 12.6,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+  },
+  "op_027": {
+    "id": "op_027",
+    "name": "Hari Dubey",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_027.jpg",
+    "calibration": {
+      "ear_baseline": 0.282,
+      "perclos_baseline": 0.05,
+      "blink_rate_baseline": 15.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_028": {
+    "id": "op_028",
+    "name": "Ananya Dubey",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_028.jpg",
+    "calibration": {
+      "ear_baseline": 0.282,
+      "perclos_baseline": 0.07,
+      "blink_rate_baseline": 11.5,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_029": {
+    "id": "op_029",
+    "name": "Sunita Rao",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_029.jpg",
+    "calibration": {
+      "ear_baseline": 0.322,
+      "perclos_baseline": 0.075,
+      "blink_rate_baseline": 13.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_030": {
+    "id": "op_030",
+    "name": "Madhav Jha",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_030.jpg",
+    "calibration": {
+      "ear_baseline": 0.306,
+      "perclos_baseline": 0.078,
+      "blink_rate_baseline": 11.9,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_031": {
+    "id": "op_031",
+    "name": "Hari Rao",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "intermediate",
+    "photo": "op_031.jpg",
+    "calibration": {
+      "ear_baseline": 0.274,
+      "perclos_baseline": 0.065,
+      "blink_rate_baseline": 12.8,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_032": {
+    "id": "op_032",
+    "name": "Ramesh Trivedi",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_032.jpg",
+    "calibration": {
+      "ear_baseline": 0.26,
+      "perclos_baseline": 0.071,
+      "blink_rate_baseline": 15.5,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_033": {
+    "id": "op_033",
+    "name": "Sanjay Singh",
+    "role": "Grader Operator",
+    "hearing": "impaired",
+    "color_vision": "tritanopia",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_033.jpg",
+    "calibration": {
+      "ear_baseline": 0.323,
+      "perclos_baseline": 0.062,
+      "blink_rate_baseline": 16.8,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts. Colour-blind (tritanopia) \u2014 high contrast + icons."
+  },
+  "op_034": {
+    "id": "op_034",
+    "name": "Ganesh Suryanarayanan",
+    "role": "Bulldozer Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_034.jpg",
+    "calibration": {
+      "ear_baseline": 0.325,
+      "perclos_baseline": 0.079,
+      "blink_rate_baseline": 11.3,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_035": {
+    "id": "op_035",
+    "name": "Gauri Pandey",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_035.jpg",
+    "calibration": {
+      "ear_baseline": 0.288,
+      "perclos_baseline": 0.065,
+      "blink_rate_baseline": 12.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_036": {
+    "id": "op_036",
+    "name": "Rohan Singh",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_036.jpg",
+    "calibration": {
+      "ear_baseline": 0.315,
+      "perclos_baseline": 0.056,
+      "blink_rate_baseline": 15.7,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_037": {
+    "id": "op_037",
+    "name": "Vikas Dubey",
+    "role": "Loader Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_037.jpg",
+    "calibration": {
+      "ear_baseline": 0.32,
+      "perclos_baseline": 0.049,
+      "blink_rate_baseline": 16.7,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+  },
+  "op_038": {
+    "id": "op_038",
+    "name": "Sunita Pillai",
+    "role": "Loader Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_038.jpg",
+    "calibration": {
+      "ear_baseline": 0.283,
+      "perclos_baseline": 0.075,
+      "blink_rate_baseline": 17.8,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_039": {
+    "id": "op_039",
+    "name": "Siddharth Pillai",
+    "role": "Backhoe Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_039.jpg",
+    "calibration": {
+      "ear_baseline": 0.272,
+      "perclos_baseline": 0.079,
+      "blink_rate_baseline": 12.9,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_040": {
+    "id": "op_040",
+    "name": "Dev Menon",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "intermediate",
+    "photo": "op_040.jpg",
+    "calibration": {
+      "ear_baseline": 0.287,
+      "perclos_baseline": 0.063,
+      "blink_rate_baseline": 12.8,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_041": {
+    "id": "op_041",
+    "name": "Alok Menon",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_041.jpg",
+    "calibration": {
+      "ear_baseline": 0.324,
+      "perclos_baseline": 0.065,
+      "blink_rate_baseline": 15.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_042": {
+    "id": "op_042",
+    "name": "Hari Joshi",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_042.jpg",
+    "calibration": {
+      "ear_baseline": 0.269,
+      "perclos_baseline": 0.057,
+      "blink_rate_baseline": 17.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_043": {
+    "id": "op_043",
+    "name": "Abhishek Kumar",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_043.jpg",
+    "calibration": {
+      "ear_baseline": 0.275,
+      "perclos_baseline": 0.071,
+      "blink_rate_baseline": 15.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_044": {
+    "id": "op_044",
+    "name": "Ananya Prasad",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_044.jpg",
+    "calibration": {
+      "ear_baseline": 0.323,
+      "perclos_baseline": 0.072,
+      "blink_rate_baseline": 12.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_045": {
+    "id": "op_045",
+    "name": "Deepak Kulkarni",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "trainee",
+    "photo": "op_045.jpg",
+    "calibration": {
+      "ear_baseline": 0.274,
+      "perclos_baseline": 0.041,
+      "blink_rate_baseline": 12.7,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_046": {
+    "id": "op_046",
+    "name": "Suresh Joshi",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_046.jpg",
+    "calibration": {
+      "ear_baseline": 0.287,
+      "perclos_baseline": 0.056,
+      "blink_rate_baseline": 12.0,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_047": {
+    "id": "op_047",
+    "name": "Manish Patel",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_047.jpg",
+    "calibration": {
+      "ear_baseline": 0.296,
+      "perclos_baseline": 0.042,
+      "blink_rate_baseline": 12.7,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_048": {
+    "id": "op_048",
+    "name": "Murugan Nair",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_048.jpg",
+    "calibration": {
+      "ear_baseline": 0.302,
+      "perclos_baseline": 0.078,
+      "blink_rate_baseline": 17.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_049": {
+    "id": "op_049",
+    "name": "Umesh Krishnan",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_049.jpg",
+    "calibration": {
+      "ear_baseline": 0.278,
+      "perclos_baseline": 0.05,
+      "blink_rate_baseline": 15.5,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_050": {
+    "id": "op_050",
+    "name": "Srikant Nambiar",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_050.jpg",
+    "calibration": {
+      "ear_baseline": 0.276,
+      "perclos_baseline": 0.053,
+      "blink_rate_baseline": 17.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_051": {
+    "id": "op_051",
+    "name": "Deepak Reddy",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_051.jpg",
+    "calibration": {
+      "ear_baseline": 0.264,
+      "perclos_baseline": 0.056,
+      "blink_rate_baseline": 14.8,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_052": {
+    "id": "op_052",
+    "name": "Neha Gupta",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_052.jpg",
+    "calibration": {
+      "ear_baseline": 0.309,
+      "perclos_baseline": 0.074,
+      "blink_rate_baseline": 16.4,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_053": {
+    "id": "op_053",
+    "name": "Kavita Subramanian",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "intermediate",
+    "photo": "op_053.jpg",
+    "calibration": {
+      "ear_baseline": 0.327,
+      "perclos_baseline": 0.057,
+      "blink_rate_baseline": 16.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_054": {
+    "id": "op_054",
+    "name": "Kamlesh Yadav",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_054.jpg",
+    "calibration": {
+      "ear_baseline": 0.307,
+      "perclos_baseline": 0.072,
+      "blink_rate_baseline": 16.1,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+  },
+  "op_055": {
+    "id": "op_055",
+    "name": "Srinivas Prasad",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_055.jpg",
+    "calibration": {
+      "ear_baseline": 0.266,
+      "perclos_baseline": 0.057,
+      "blink_rate_baseline": 17.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_056": {
+    "id": "op_056",
+    "name": "Manoj Gupta",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_056.jpg",
+    "calibration": {
+      "ear_baseline": 0.313,
+      "perclos_baseline": 0.055,
+      "blink_rate_baseline": 16.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_057": {
+    "id": "op_057",
+    "name": "Srinivas Hegde",
+    "role": "Loader Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_057.jpg",
+    "calibration": {
+      "ear_baseline": 0.33,
+      "perclos_baseline": 0.054,
+      "blink_rate_baseline": 15.6,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+  },
+  "op_058": {
+    "id": "op_058",
+    "name": "Srikant Verma",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_058.jpg",
+    "calibration": {
+      "ear_baseline": 0.277,
+      "perclos_baseline": 0.059,
+      "blink_rate_baseline": 11.8,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_059": {
+    "id": "op_059",
+    "name": "Pranav Prasad",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_059.jpg",
+    "calibration": {
+      "ear_baseline": 0.31,
+      "perclos_baseline": 0.071,
+      "blink_rate_baseline": 12.1,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_060": {
+    "id": "op_060",
+    "name": "Vikram Rao",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_060.jpg",
+    "calibration": {
+      "ear_baseline": 0.288,
+      "perclos_baseline": 0.069,
+      "blink_rate_baseline": 11.5,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_061": {
+    "id": "op_061",
+    "name": "Manish Dubey",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_061.jpg",
+    "calibration": {
+      "ear_baseline": 0.315,
+      "perclos_baseline": 0.054,
+      "blink_rate_baseline": 14.0,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+  },
+  "op_062": {
+    "id": "op_062",
+    "name": "Jyoti Joshi",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_062.jpg",
+    "calibration": {
+      "ear_baseline": 0.304,
+      "perclos_baseline": 0.073,
+      "blink_rate_baseline": 16.0,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+  },
+  "op_063": {
+    "id": "op_063",
+    "name": "Pooja Kumar",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_063.jpg",
+    "calibration": {
+      "ear_baseline": 0.279,
+      "perclos_baseline": 0.074,
+      "blink_rate_baseline": 16.8,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_064": {
+    "id": "op_064",
+    "name": "Deepak Deshmukh",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_064.jpg",
+    "calibration": {
+      "ear_baseline": 0.284,
+      "perclos_baseline": 0.06,
+      "blink_rate_baseline": 13.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_065": {
+    "id": "op_065",
+    "name": "Ramesh Pandey",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "intermediate",
+    "photo": "op_065.jpg",
+    "calibration": {
+      "ear_baseline": 0.322,
+      "perclos_baseline": 0.062,
+      "blink_rate_baseline": 14.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_066": {
+    "id": "op_066",
+    "name": "Nikhil Mehta",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_066.jpg",
+    "calibration": {
+      "ear_baseline": 0.293,
+      "perclos_baseline": 0.068,
+      "blink_rate_baseline": 14.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_067": {
+    "id": "op_067",
+    "name": "Aditya Mehta",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_067.jpg",
+    "calibration": {
+      "ear_baseline": 0.301,
+      "perclos_baseline": 0.059,
+      "blink_rate_baseline": 14.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_068": {
+    "id": "op_068",
+    "name": "Pooja Suryanarayanan",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_068.jpg",
+    "calibration": {
+      "ear_baseline": 0.276,
+      "perclos_baseline": 0.069,
+      "blink_rate_baseline": 13.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_069": {
+    "id": "op_069",
+    "name": "Vikas Balakrishnan",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_069.jpg",
+    "calibration": {
+      "ear_baseline": 0.301,
+      "perclos_baseline": 0.07,
+      "blink_rate_baseline": 15.2,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_070": {
+    "id": "op_070",
+    "name": "Dev Mishra",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_070.jpg",
+    "calibration": {
+      "ear_baseline": 0.269,
+      "perclos_baseline": 0.042,
+      "blink_rate_baseline": 11.4,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+  },
+  "op_071": {
+    "id": "op_071",
+    "name": "Vijay Reddy",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "trainee",
+    "photo": "op_071.jpg",
+    "calibration": {
+      "ear_baseline": 0.291,
+      "perclos_baseline": 0.047,
+      "blink_rate_baseline": 11.4,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_072": {
+    "id": "op_072",
+    "name": "Raghavan Subramanian",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_072.jpg",
+    "calibration": {
+      "ear_baseline": 0.308,
+      "perclos_baseline": 0.046,
+      "blink_rate_baseline": 16.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_073": {
+    "id": "op_073",
+    "name": "Vikram Mehta",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_073.jpg",
+    "calibration": {
+      "ear_baseline": 0.315,
+      "perclos_baseline": 0.049,
+      "blink_rate_baseline": 14.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_074": {
+    "id": "op_074",
+    "name": "Ritu Jha",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_074.jpg",
+    "calibration": {
+      "ear_baseline": 0.267,
+      "perclos_baseline": 0.071,
+      "blink_rate_baseline": 15.4,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+  },
+  "op_075": {
+    "id": "op_075",
+    "name": "Sanjay Mehta",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_075.jpg",
+    "calibration": {
+      "ear_baseline": 0.289,
+      "perclos_baseline": 0.068,
+      "blink_rate_baseline": 14.3,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_076": {
+    "id": "op_076",
+    "name": "Amit Yadav",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "deuteranopia",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_076.jpg",
+    "calibration": {
+      "ear_baseline": 0.325,
+      "perclos_baseline": 0.072,
+      "blink_rate_baseline": 15.4,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (deuteranopia) \u2014 high contrast + icons."
+  },
+  "op_077": {
+    "id": "op_077",
+    "name": "Saurabh Mishra",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_077.jpg",
+    "calibration": {
+      "ear_baseline": 0.318,
+      "perclos_baseline": 0.043,
+      "blink_rate_baseline": 12.2,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+  },
+  "op_078": {
+    "id": "op_078",
+    "name": "Vikram Kulkarni",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_078.jpg",
+    "calibration": {
+      "ear_baseline": 0.326,
+      "perclos_baseline": 0.06,
+      "blink_rate_baseline": 14.5,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_079": {
+    "id": "op_079",
+    "name": "Deepak Verma",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_079.jpg",
+    "calibration": {
+      "ear_baseline": 0.319,
+      "perclos_baseline": 0.063,
+      "blink_rate_baseline": 17.7,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+  },
+  "op_080": {
+    "id": "op_080",
+    "name": "Ashok Deshmukh",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_080.jpg",
+    "calibration": {
+      "ear_baseline": 0.279,
+      "perclos_baseline": 0.08,
+      "blink_rate_baseline": 14.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_081": {
+    "id": "op_081",
+    "name": "Rangan Murthy",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_081.jpg",
+    "calibration": {
+      "ear_baseline": 0.267,
+      "perclos_baseline": 0.046,
+      "blink_rate_baseline": 13.9,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_082": {
+    "id": "op_082",
+    "name": "Ramesh Kulkarni",
+    "role": "Backhoe Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_082.jpg",
+    "calibration": {
+      "ear_baseline": 0.268,
+      "perclos_baseline": 0.071,
+      "blink_rate_baseline": 17.1,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+  },
+  "op_083": {
+    "id": "op_083",
+    "name": "Rangan Patel",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_083.jpg",
+    "calibration": {
+      "ear_baseline": 0.313,
+      "perclos_baseline": 0.065,
+      "blink_rate_baseline": 16.3,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_084": {
+    "id": "op_084",
+    "name": "Pranav Deshmukh",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "intermediate",
+    "photo": "op_084.jpg",
+    "calibration": {
+      "ear_baseline": 0.262,
+      "perclos_baseline": 0.065,
+      "blink_rate_baseline": 16.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_085": {
+    "id": "op_085",
+    "name": "Alok Singh",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_085.jpg",
+    "calibration": {
+      "ear_baseline": 0.319,
+      "perclos_baseline": 0.045,
+      "blink_rate_baseline": 17.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_086": {
+    "id": "op_086",
+    "name": "Rohit Choudhury",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_086.jpg",
+    "calibration": {
+      "ear_baseline": 0.294,
+      "perclos_baseline": 0.059,
+      "blink_rate_baseline": 14.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_087": {
+    "id": "op_087",
+    "name": "Karan Shetty",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_087.jpg",
+    "calibration": {
+      "ear_baseline": 0.289,
+      "perclos_baseline": 0.077,
+      "blink_rate_baseline": 14.6,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_088": {
+    "id": "op_088",
+    "name": "Rangan Patel",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_088.jpg",
+    "calibration": {
+      "ear_baseline": 0.321,
+      "perclos_baseline": 0.058,
+      "blink_rate_baseline": 14.4,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_089": {
+    "id": "op_089",
+    "name": "Divya Suryanarayanan",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_089.jpg",
+    "calibration": {
+      "ear_baseline": 0.277,
+      "perclos_baseline": 0.055,
+      "blink_rate_baseline": 17.0,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_090": {
+    "id": "op_090",
+    "name": "Neha Verma",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_090.jpg",
+    "calibration": {
+      "ear_baseline": 0.329,
+      "perclos_baseline": 0.072,
+      "blink_rate_baseline": 15.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_091": {
+    "id": "op_091",
+    "name": "Karan Murthy",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_091.jpg",
+    "calibration": {
+      "ear_baseline": 0.267,
+      "perclos_baseline": 0.074,
+      "blink_rate_baseline": 11.7,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_092": {
+    "id": "op_092",
+    "name": "Sanjay Prasad",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "intermediate",
+    "photo": "op_092.jpg",
+    "calibration": {
+      "ear_baseline": 0.265,
+      "perclos_baseline": 0.071,
+      "blink_rate_baseline": 12.9,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_093": {
+    "id": "op_093",
+    "name": "Umesh Gowda",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_093.jpg",
+    "calibration": {
+      "ear_baseline": 0.282,
+      "perclos_baseline": 0.069,
+      "blink_rate_baseline": 16.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_094": {
+    "id": "op_094",
+    "name": "Raghavan Balakrishnan",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "trainee",
+    "photo": "op_094.jpg",
+    "calibration": {
+      "ear_baseline": 0.33,
+      "perclos_baseline": 0.07,
+      "blink_rate_baseline": 14.0,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_095": {
+    "id": "op_095",
+    "name": "Dev Rao",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_095.jpg",
+    "calibration": {
+      "ear_baseline": 0.316,
+      "perclos_baseline": 0.052,
+      "blink_rate_baseline": 13.6,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+  },
+  "op_096": {
+    "id": "op_096",
+    "name": "Karan Dubey",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_096.jpg",
+    "calibration": {
+      "ear_baseline": 0.287,
+      "perclos_baseline": 0.067,
+      "blink_rate_baseline": 14.5,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_097": {
+    "id": "op_097",
+    "name": "Ganesh Choudhury",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_097.jpg",
+    "calibration": {
+      "ear_baseline": 0.261,
+      "perclos_baseline": 0.072,
+      "blink_rate_baseline": 17.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_098": {
+    "id": "op_098",
+    "name": "Abhishek Balakrishnan",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_098.jpg",
+    "calibration": {
+      "ear_baseline": 0.281,
+      "perclos_baseline": 0.078,
+      "blink_rate_baseline": 15.8,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_099": {
+    "id": "op_099",
+    "name": "Sunita Joshi",
+    "role": "Dumper Driver",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_099.jpg",
+    "calibration": {
+      "ear_baseline": 0.285,
+      "perclos_baseline": 0.052,
+      "blink_rate_baseline": 15.9,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+  },
+  "op_100": {
+    "id": "op_100",
+    "name": "Aditya Gowda",
+    "role": "Loader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_100.jpg",
+    "calibration": {
+      "ear_baseline": 0.328,
+      "perclos_baseline": 0.076,
+      "blink_rate_baseline": 16.2,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_101": {
+    "id": "op_101",
+    "name": "Srinivas Kulkarni",
+    "role": "Dumper Driver",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "trainee",
+    "photo": "op_101.jpg",
+    "calibration": {
+      "ear_baseline": 0.307,
+      "perclos_baseline": 0.069,
+      "blink_rate_baseline": 15.6,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_102": {
+    "id": "op_102",
+    "name": "Srinivas Reddy",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_102.jpg",
+    "calibration": {
+      "ear_baseline": 0.311,
+      "perclos_baseline": 0.044,
+      "blink_rate_baseline": 13.1,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+  },
+  "op_103": {
+    "id": "op_103",
+    "name": "Vikas Hegde",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_103.jpg",
+    "calibration": {
+      "ear_baseline": 0.286,
+      "perclos_baseline": 0.06,
+      "blink_rate_baseline": 12.9,
+      "calibrated": true
+    },
+    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_104": {
+    "id": "op_104",
+    "name": "Madhav Trivedi",
+    "role": "Grader Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "ta",
+    "experience": "expert",
+    "photo": "op_104.jpg",
+    "calibration": {
+      "ear_baseline": 0.293,
+      "perclos_baseline": 0.043,
+      "blink_rate_baseline": 16.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_105": {
+    "id": "op_105",
+    "name": "Rajesh Gowda",
+    "role": "Safety Inspector",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_105.jpg",
+    "calibration": {
+      "ear_baseline": 0.292,
+      "perclos_baseline": 0.067,
+      "blink_rate_baseline": 15.7,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+  },
+  "op_106": {
+    "id": "op_106",
+    "name": "Ganesh Shetty",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_106.jpg",
+    "calibration": {
+      "ear_baseline": 0.283,
+      "perclos_baseline": 0.064,
+      "blink_rate_baseline": 15.5,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+  },
+  "op_107": {
+    "id": "op_107",
+    "name": "Rahul Prasad",
+    "role": "Loader Operator",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "trainee",
+    "photo": "op_107.jpg",
+    "calibration": {
+      "ear_baseline": 0.281,
+      "perclos_baseline": 0.06,
+      "blink_rate_baseline": 11.7,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_108": {
+    "id": "op_108",
+    "name": "Venkatesh Balakrishnan",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "intermediate",
+    "photo": "op_108.jpg",
+    "calibration": {
+      "ear_baseline": 0.309,
+      "perclos_baseline": 0.062,
+      "blink_rate_baseline": 15.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_109": {
+    "id": "op_109",
+    "name": "Sandeep Choudhury",
+    "role": "Backhoe Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_109.jpg",
+    "calibration": {
+      "ear_baseline": 0.28,
+      "perclos_baseline": 0.068,
+      "blink_rate_baseline": 12.5,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_110": {
+    "id": "op_110",
+    "name": "Ritu Dubey",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "expert",
+    "photo": "op_110.jpg",
+    "calibration": {
+      "ear_baseline": 0.305,
+      "perclos_baseline": 0.042,
+      "blink_rate_baseline": 12.9,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_111": {
+    "id": "op_111",
+    "name": "Hari Prasad",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_111.jpg",
+    "calibration": {
+      "ear_baseline": 0.264,
+      "perclos_baseline": 0.053,
+      "blink_rate_baseline": 17.9,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_112": {
+    "id": "op_112",
+    "name": "Balaji Pandey",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_112.jpg",
+    "calibration": {
+      "ear_baseline": 0.283,
+      "perclos_baseline": 0.046,
+      "blink_rate_baseline": 17.3,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_113": {
+    "id": "op_113",
+    "name": "Aarav Deshmukh",
+    "role": "Bulldozer Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "expert",
+    "photo": "op_113.jpg",
+    "calibration": {
+      "ear_baseline": 0.306,
+      "perclos_baseline": 0.041,
+      "blink_rate_baseline": 11.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_114": {
+    "id": "op_114",
+    "name": "Balaji Dubey",
+    "role": "Safety Inspector",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "en",
+    "experience": "trainee",
+    "photo": "op_114.jpg",
+    "calibration": {
+      "ear_baseline": 0.297,
+      "perclos_baseline": 0.07,
+      "blink_rate_baseline": 14.3,
+      "calibrated": true
+    },
+    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons. Trainee \u2014 conservative thresholds, simpler UI."
+  },
+  "op_115": {
+    "id": "op_115",
+    "name": "Srikant Naicker",
+    "role": "Crane Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "te",
+    "experience": "expert",
+    "photo": "op_115.jpg",
+    "calibration": {
+      "ear_baseline": 0.311,
+      "perclos_baseline": 0.076,
+      "blink_rate_baseline": 15.6,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_116": {
+    "id": "op_116",
+    "name": "Vikram Prasad",
+    "role": "Excavator Operator",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "experience": "intermediate",
+    "photo": "op_116.jpg",
+    "calibration": {
+      "ear_baseline": 0.268,
+      "perclos_baseline": 0.068,
+      "blink_rate_baseline": 14.1,
+      "calibrated": true
+    },
+    "notes": "Standard operating profile."
+  },
+  "op_117": {
+    "id": "op_117",
+    "name": "Ramakrishnan Mehta",
+    "role": "Safety Inspector",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "hi",
+    "experience": "trainee",
+    "photo": "op_117.jpg",
+    "calibration": {
+      "ear_baseline": 0.301,
+      "perclos_baseline": 0.068,
+      "blink_rate_baseline": 13.7,
+      "calibrated": true
+    },
+    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
   }
 }

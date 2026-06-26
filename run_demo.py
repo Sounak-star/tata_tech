@@ -46,7 +46,7 @@ def main() -> None:
         headless(args.headless)
     else:
         from brain.server import main as serve
-        print("SAARTHI live → http://localhost:8000  (phone: /phone)")
+        print("SAARTHI live -> http://localhost:8000  (phone: /phone)")
         serve()
 
 

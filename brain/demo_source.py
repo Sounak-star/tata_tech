@@ -95,6 +95,13 @@ class DemoSource:
         if phase != "tilt":
             tilt = min(tilt, 12.0)
 
+        # Add dynamic terrain slope noise when moving to reflect sensor changes realistically
+        if speed > 0.2:
+            import math
+            wave = 2.5 * math.sin(self._t / 6.0)
+            jitter = (self._t % 3 - 1) * 0.2
+            tilt = max(0.0, tilt + wave + jitter)
+
         return {
             "phase": phase,
             "drowsiness": round(drowsiness, 3),

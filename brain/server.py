@@ -144,15 +144,18 @@ async def _calibrate_and_start_camera():
     if HAS_MEDIAPIPE:
         print("[Server] Starting calibration background task...")
         loop = asyncio.get_running_loop()
-        # Run the blocking calibration in a separate thread
-        calibration_rows = await loop.run_in_executor(None, tracker.calibrate, 25.0)
-        
-        # Inject the calibrated engine into the live brain
-        from .fatigue import FatigueEngine
-        brain.fatigue = FatigueEngine(calibration_rows)
-        
-        tracker.start()
-        print("[Server] Calibration complete. Live features now driving fatigue.")
+        try:
+            # Run the blocking calibration in a separate thread
+            calibration_rows = await loop.run_in_executor(None, tracker.calibrate, 25.0)
+            
+            # Inject the calibrated engine into the live brain
+            from .fatigue import FatigueEngine
+            brain.fatigue = FatigueEngine(calibration_rows)
+            
+            tracker.start()
+            print("[Server] Calibration complete. Live features now driving fatigue.")
+        except Exception as exc:
+            print(f"[Server] Webcam calibration bypassed or failed: {exc}. Running on synthetic baseline.")
 
 
 @app.on_event("startup")

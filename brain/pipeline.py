@@ -44,7 +44,7 @@ class Brain:
         self.persons = PersonDetector()
         self.engine = HybridDecisionEngine()
         self.log = event_log or EventLog()
-        self.context = _load_context_risk()
+        self.context = {"score": 35.0, "bucket": "Medium", "color": "#FF9800", "weather": "Clear/Unknown", "time": "Morning"}
         self._tick = 0
         # Timeline throttle: track previous alert level to detect onset transitions only.
         # An entry is written ONCE per rising edge (level > _prev_level), not every tick.
@@ -120,6 +120,16 @@ class Brain:
         delivery = personalise(level, profile)
         card = build_reason_card(level, tier, decision["reason"], fatigue, zone_name, tinfo)
 
+        # Calculate dynamic context risk using the actual XGBoost model
+        context_risk = _calculate_dynamic_context_risk(
+            role=profile.get("role", "Excavator Operator"),
+            phase=signal.get("phase", "calm"),
+            fatigue_p=fatigue["p_at_risk"],
+            zone=zone,
+            tilt_angle=tinfo["tilt_angle"],
+            tick=self._tick
+        )
+
         # Throttle: log only on upward level transition (onset), not every tick.
         if level >= 2 and level > self._prev_level:
             self.log.log(profile["id"], level, tier, card, risk["score"])
@@ -143,17 +153,110 @@ class Brain:
             "alert": {"level": level, "label": decision["label"], "tier": tier,
                       "reason": decision["reason"], "delivery": delivery},
             "reason_card": card,
-            "context_risk": self.context,
+            "context_risk": context_risk,
         }
 
 
-def _load_context_risk() -> dict:
-    """Dev 3 context-risk badge for the supervisor view (best-effort)."""
+def _calculate_dynamic_context_risk(
+    role: str,
+    phase: str,
+    fatigue_p: float,
+    zone: int,
+    tilt_angle: float,
+    tick: int
+) -> dict:
     try:
         from context_risk_api import get_context_risk  # type: ignore[import]
 
-        r = get_context_risk(machine_type="Excavator", task_type="Excavation",
-                             time_of_day="Morning", weather_condition="Clear/Unknown")
-        return {"score": r["risk_score"], "bucket": r["risk_bucket"], "color": r["risk_color"]}
-    except Exception:
-        return {"score": None, "bucket": "n/a", "color": "#888888"}
+        # 1. Map operator role to machine_type
+        role_lower = role.lower()
+        if "crane" in role_lower:
+            machine_type = "Crane"
+        elif "bulldozer" in role_lower:
+            machine_type = "Bulldozer"
+        elif "dumper" in role_lower or "truck" in role_lower:
+            machine_type = "Dump Truck"
+        elif "loader" in role_lower:
+            machine_type = "Loader"
+        else:
+            machine_type = "Excavator"
+
+        # 2. Map demo phase to task_type and weather
+        if phase == "blind_spot":
+            task_type = "Loading/Unloading"
+            weather_condition = "Wind"
+        elif phase == "tilt":
+            task_type = "Excavation"
+            weather_condition = "Rain"
+        elif phase in ("switch_priya", "switch_ravi"):
+            task_type = "Idling/Parked"
+            weather_condition = "Clear/Unknown"
+        elif phase == "trainee_run":
+            task_type = "Setup/Positioning"
+            weather_condition = "Clear/Unknown"
+        else:
+            task_type = "Operating"
+            weather_condition = "Clear/Unknown"
+
+        # 3. Vary time_of_day across a simulated cycle
+        tick_mod = tick % 120
+        if tick_mod < 30:
+            time_of_day = "Morning"
+        elif tick_mod < 60:
+            time_of_day = "Afternoon"
+        elif tick_mod < 90:
+            time_of_day = "Evening"
+        else:
+            time_of_day = "Night"
+
+        # 4. Predict baseline risk via XGBoost model
+        r = get_context_risk(
+            machine_type=machine_type,
+            task_type=task_type,
+            time_of_day=time_of_day,
+            weather_condition=weather_condition
+        )
+        score = r["risk_score"]
+        bucket = r["risk_bucket"]
+        color = r["risk_color"]
+
+        # 5. Escalate based on real-time sensor detections
+        if fatigue_p > 0.7 or zone >= 2 or tilt_angle > 20.0:
+            if bucket == "Low":
+                bucket = "Medium"
+                color = "#FF9800"
+                score = max(score, 35.0)
+            elif bucket == "Medium":
+                bucket = "High"
+                color = "#F44336"
+                score = max(score, 60.0)
+            elif bucket == "High":
+                bucket = "Critical"
+                color = "#9C27B0"
+                score = max(score, 80.0)
+        elif fatigue_p < 0.2 and zone == 0 and tilt_angle < 10.0:
+            if bucket == "High":
+                bucket = "Medium"
+                color = "#FF9800"
+                score = min(score, 45.0)
+            elif bucket == "Medium":
+                bucket = "Low"
+                color = "#4CAF50"
+                score = min(score, 20.0)
+
+        return {
+            "score": score,
+            "bucket": bucket,
+            "color": color,
+            "weather": weather_condition,
+            "time": time_of_day
+        }
+    except Exception as exc:
+        print(f"[Context Risk Fallback] Error: {exc}")
+        return {
+            "score": 35.0,
+            "bucket": "Medium",
+            "color": "#FF9800",
+            "weather": "Clear/Unknown",
+            "time": "Morning"
+        }
