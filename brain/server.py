@@ -75,8 +75,6 @@ async def _loop() -> None:
     """The heartbeat: pull a signal, run the brain, broadcast the frame."""
     while True:
         signal = source.step()
-        if signal.get("_switch_operator"):
-            brain.switch_operator(signal["_switch_operator"])
         frame = brain.tick(signal)
         frame["phase"] = signal.get("phase")
         # Keep the camera preview overlay in sync with the latest fatigue decision.

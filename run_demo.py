@@ -25,8 +25,6 @@ def headless(n: int) -> None:
     print("-" * 92)
     for _ in range(n):
         sig = source.step()
-        if sig.get("_switch_operator"):
-            brain.switch_operator(sig["_switch_operator"])
         f = brain.tick(sig)
         a = f["alert"]
         rc = f["reason_card"]["title"] if f["reason_card"] else "-"

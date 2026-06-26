@@ -35,9 +35,7 @@ class DemoSource:
             ("recover", 20),
             ("blind_spot", 30),
             ("tilt", 25),
-            ("switch_priya", 1),
             ("trainee_run", 40),
-            ("switch_ravi", 1),
         ]
         self._cycle = sum(d for _, d in self._script)
 
@@ -83,12 +81,8 @@ class DemoSource:
             # Scripted slope climb: force a steep tilt while moving.
             tilt = 28.0 if k >= 10 else (18.0 if k >= 4 else tilt)
             speed = max(speed, 0.8)
-        elif phase == "switch_priya":
-            switch = "priya"
         elif phase == "trainee_run":
             drowsiness = 0.2 + 0.01 * k            # mild — trainee warned earlier
-        elif phase == "switch_ravi":
-            switch = "ravi"
 
         # Outside the dedicated tilt beat, keep telemetry tilt in a calm range so
         # random replay spikes don't fire spurious emergencies mid-demo.
