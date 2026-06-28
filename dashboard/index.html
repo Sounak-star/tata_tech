@@ -387,9 +387,22 @@
                 style="width:100%; padding:8px; background:var(--red); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
           ⚠ Trigger Blind-Spot
         </button>
-        <button id="testAlertBtn" onclick="triggerTestAlert()" style="width: 100%; padding: 8px; background: #5a3a00; color: #ffb300; border: 1px solid #ffb300; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background .15s;">
+        <button onclick="fetch('/api/trigger_tilt', {method:'POST'})"
+                style="width:100%; padding:8px; background:var(--panel); color:var(--amber); border:1px solid var(--amber); border-radius:6px; cursor:pointer; font-weight:bold;">
+          ⚠ Trigger Tilt Alert
+        </button>
+        <button id="testAlertBtn" onclick="triggerTestAlert()"
+                style="width:100%; padding:8px; background:#5a3a00; color:#ffb300; border:1px solid #ffb300; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px; transition:background .15s;">
           🧪 Test Alert (Level 3, 4 s)
         </button>
+        <button id="testVoiceBtn" onclick="testVoice()"
+                style="width:100%; padding:8px; background:var(--panel); color:#29b6f6; border:1px solid #29b6f6; border-radius:6px; cursor:pointer; font-weight:bold;">
+          🔊 Test Voice
+        </button>
+        <div id="voiceStatus"
+             style="font-size:10px; color:var(--muted); text-align:center; padding:2px 0;">
+          Voice: tap Enable to unlock
+        </div>
       </div>
     </div>
     
@@ -547,20 +560,59 @@ const SEV_LABELS = {
   cb:     { OK:'✓ OK', MILD:'! MILD', STRONG:'!! STRONG' },
 };
 
-// ── Web Speech API Alarm text keys ──────────────────────────────────────
-const SPEECH_PHRASES = {
-  en: { 1: "Heads up. Stay alert.", 2: "Warning. Take action now.", 3: "Emergency. Machine slowing." },
-  hi: { 1: "सावधान रहें।", 2: "चेतावनी। तुरंत कार्रवाई करें।", 3: "आपातकाल। मशीन धीमी हो रही है।" },
-  ta: { 1: "கவனமாக இருங்கள்.", 2: "எச்சரிக்கை. உடனே நடவடிக்கை.", 3: "அவசரம். இயந்திரம் நிற்கிறது." },
-  te: { 1: "అప్రమత్తంగా ఉండండి.", 2: "హెచ్చరిక. వెంటనే చర్య.", 3: "అత్యవసరం. యంత్రం ఆగుతోంది." }
+// ══════════════════════════════════════════════════════════════════════
+// VOICE ALERT PHRASES  <- EDIT / VERIFY TRANSLATIONS HERE BEFORE DEMO
+// Keys: fatigue_emergency | blindspot_emergency | tilt_emergency | warning | nudge
+// Romanized Hindi (user-supplied). Tamil & Telugu in native script for TTS.
+// Verify Tamil/Telugu with a native speaker before going on stage.
+// ══════════════════════════════════════════════════════════════════════
+const VOICE_PHRASES = {
+  en: {
+    fatigue_emergency:   'Warning! Fatigue detected. Eyes closed too long. Please stop the machine immediately.',
+    blindspot_emergency: 'Danger! Person detected behind the machine. Stop reversing immediately.',
+    tilt_emergency:      'Danger! Machine is tilting critically. Stop and stabilise immediately.',
+    warning:             'Caution. Elevated risk detected. Please take action soon.',
+    nudge:               'Heads up. Stay alert and scan your surroundings.',
+  },
+  hi: {
+    // Romanized Hindi as supplied by user - hi-IN TTS reads these phonetically.
+    fatigue_emergency:   'Chetaavani! Aap thak gaye hain, kripya machine rokein.',
+    blindspot_emergency: 'Khatra! Peeche vyakti hai, reverse karna band karein.',
+    tilt_emergency:      'Khatra! Machine jhuk rahi hai, turant rokein.',
+    warning:             'Savdhaan! Jokhim badh raha hai, kripya dhyan dein.',
+    nudge:               'Kripya satark rahein aur aas-paas dekhein.',
+  },
+  ta: {
+    // Tamil script - correct when a ta-IN voice is installed.
+    // Romanized ref: Ethirikkai! Neenga sorvadainthereengal, machine nirkavum.
+    fatigue_emergency:   'எச்சரிக்கை! நீங்கள் சோர்வடைந்துள்ளீர்கள். மெஷினை உடனே நிறுத்துங்கள்.',
+    blindspot_emergency: 'ஆபத்து! பின்னால் ஒருவர் இருக்கிறார். உடனே நிறுத்துங்கள்.',
+    tilt_emergency:      'ஆபத்து! மெஷின் சாய்கிறது. உடனடியாக நிறுத்துங்கள்.',
+    warning:             'எச்சரிக்கை! ஆபத்து அதிகரிக்கிறது. உடனடியாக நடவடிக்கை எடுங்கள்.',
+    nudge:               'கவனமாக இருங்கள். சுற்றுப்புறத்தை கவனிக்கவும்.',
+  },
+  te: {
+    // Telugu script - correct when a te-IN voice is installed.
+    // Romanized ref: Hechcharika! Meeru alandipooyaaru, machine aapandi.
+    fatigue_emergency:   'హెచ్చరిక! మీరు అలసిపోయారు. మెషిన్‌ను వెంటనే ఆపండి.',
+    blindspot_emergency: 'ప్రమాదం! వెనక వ్యక్తి ఉన్నాడు. వెంటనే ఆపండి.',
+    tilt_emergency:      'ప్రమాదం! మెషీన్ వంగుతోంది. వెంటనే ఆపండి.',
+    warning:             'జాగ్రత్త! ప్రమాదం పెరుగుతోంది. చర్య తీసుకోండి.',
+    nudge:               'అప్రమత్తంగా ఉండండి. చుట్టూ చూడండి.',
+  },
 };
 
-const WELCOME_PHRASES = {
-  en: "Co-pilot profiles loaded. Standard assistance active.",
-  hi: "सह-चालక प्रोफ़ाइल लोड हो गई है। मानक सहायता सक्रिय है।",
-  ta: "துணை பைலட் சுயவிவரம் ஏற்றப்பட்டது. நிலையான உதவி செயலில் உள்ளது.",
-  te: "కో-పైలట్ ప్రొఫైల్ లోడ్ చేయబడింది. ప్రామాణిక సహాయం సక్రియంగా ఉంది."
+// Welcome phrase on operator switch (first name only for brevity)
+const VOICE_WELCOME = {
+  en: (n) => n + ' profile loaded. Co-pilot active.',
+  hi: (n) => n + ' ka profile load ho gaya. Sahayak taiyaar hai.',
+  ta: (n) => n + ' profile ஏற்றப்பட்டது. துணை இயகம் தயார்.',
+  te: (n) => n + ' profile లోడ్ అయింది. సహాయకం సిద్ధంగా ఉంది.',
 };
+
+// BCP-47 codes for SpeechSynthesisUtterance.lang
+const LANG_CODE = { en: 'en-IN', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN' };
+
 
 let ws;
 let _cbMode = false;   // tracks current colour-blind state
@@ -576,18 +628,20 @@ let _audioUnlocked = false;
 let _beepInterval = null;
 let _testAlertTimer = null;
 let _testActive = false;
-let lastSpokenLevel = 0;
-let lastSpokenOperator = null;
 
 const _soundUnlockBtn = document.getElementById('soundUnlock');
 _soundUnlockBtn.style.display = 'block';
 
 _soundUnlockBtn.addEventListener('click', () => {
   unlockAudio();
+  _voiceEnabled = true;
   if (window.speechSynthesis) {
-    const u = new SpeechSynthesisUtterance("Audio unlocked.");
-    u.volume = 0.0;
+    // Silent utterance to unlock speech in this browser session
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
     window.speechSynthesis.speak(u);
+    // Report which languages have installed voices (see browser console)
+    setTimeout(_reportVoices, 800);
   }
   _soundUnlockBtn.style.display = 'none';
 }, { once: true });
@@ -597,8 +651,9 @@ document.body.addEventListener('keydown', unlockAudio, { once: true });
 
 function unlockAudio() {
   if (_audioUnlocked) return;
-  _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  _audioCtx      = new (window.AudioContext || window.webkitAudioContext)();
   _audioUnlocked = true;
+  _voiceEnabled  = true;   // also enable speechSynthesis output
   _soundUnlockBtn.style.display = 'none';
 }
 
@@ -639,46 +694,134 @@ function setBuzz(level, isHearingImpaired) {
   }
 }
 
-// ── Voice Alert Escalations & Welcomes ────────────────────────────────────
-function handleVoiceAlert(level, op) {
-  if (op.id !== lastSpokenOperator) {
-    lastSpokenOperator = op.id;
-    lastSpokenLevel = level;
-    
-    if (op.hearing !== 'impaired') {
-      const welcomeText = `${op.name}. ${WELCOME_PHRASES[op.language] || WELCOME_PHRASES['en']}`;
-      speakAlert(welcomeText, op.language);
-    }
-    return;
+// ══════════════════════════════════════════════════════════════════════
+// VOICE ENGINE — Web Speech API (offline, no cloud, no libraries)
+// ══════════════════════════════════════════════════════════════════════
+
+// Voice state (initialised here; _voiceEnabled set by unlockAudio)
+let _voiceEnabled   = false;
+let _voiceLastLevel = 0;
+let _voiceLastType  = null;
+let _voiceLastOpId  = null;
+
+// ── Report voice availability to console & UI ─────────────────────────
+function _reportVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+  const vsEl = document.getElementById('voiceStatus');
+  const summary = [];
+  Object.keys(LANG_CODE).forEach(lang => {
+    const pfx   = lang.toLowerCase();
+    const match = voices.find(v => v.lang.toLowerCase().startsWith(pfx));
+    const info  = match ? (match.lang + ' OK') : 'MISSING->en';
+    console.log('[Voice] ' + lang.toUpperCase() + ' -> ' + (match ? match.name + ' (' + match.lang + ')' : 'not installed, will fall back to English'));
+    summary.push(lang.toUpperCase() + ':' + (match ? match.lang : 'N/A'));
+  });
+  if (vsEl) vsEl.textContent = 'Voice: ' + summary.join(' | ');
+}
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = _reportVoices;
+}
+
+// ── Pick best installed voice for a BCP-47 lang code ─────────────────
+function _pickVoice(langCode) {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  let v = voices.find(v => v.lang.toLowerCase() === langCode.toLowerCase());
+  if (!v) {
+    const pfx = langCode.split('-')[0].toLowerCase();
+    v = voices.find(v => v.lang.toLowerCase().startsWith(pfx));
   }
-  
-  if (level === lastSpokenLevel) return;
-  lastSpokenLevel = level;
-  
-  if (level <= 0) return;
-  if (op.hearing === 'impaired') return; 
-  
-  const textDict = SPEECH_PHRASES[op.language] || SPEECH_PHRASES['en'];
-  const text = textDict[level] || "";
-  
-  if (text) {
-    speakAlert(text, op.language);
+  if (!v) {
+    console.warn('[Voice] No voice for ' + langCode + ' — falling back to English');
+    v = voices.find(v => v.lang.toLowerCase().startsWith('en'));
+  }
+  return v || null;
+}
+
+// ── Core speak — cancel current, then speak new ───────────────────────
+function _speak(text, langCode) {
+  if (!_voiceEnabled || !window.speechSynthesis || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang   = langCode;
+    utt.rate   = 0.88;
+    utt.pitch  = 1.0;
+    utt.volume = 1.0;
+    const voice = _pickVoice(langCode);
+    if (voice) utt.voice = voice;
+    window.speechSynthesis.speak(utt);
+  } catch (err) {
+    console.error('[Voice] Speech error:', err);
   }
 }
 
-function speakAlert(text, langCode) {
+// ── Classify alert type from frame reason / reason_card ───────────────
+function _getAlertType(frame) {
+  const lvl = frame.alert.level;
+  if (lvl <= 0) return null;
+  if (lvl === 1) return 'nudge';
+  if (lvl === 2) return 'warning';
+  const reason = (frame.alert.reason  || '').toLowerCase();
+  const title  = ((frame.reason_card && frame.reason_card.title) || '').toLowerCase();
+  if (reason.includes('eye') || reason.includes('fatigue') || title.includes('fatigue'))
+    return 'fatigue_emergency';
+  if (reason.includes('person') || reason.includes('zone') || reason.includes('revers') || title.includes('blind'))
+    return 'blindspot_emergency';
+  if (reason.includes('tilt') || reason.includes('slope') || title.includes('tilt'))
+    return 'tilt_emergency';
+  return 'fatigue_emergency'; // safe default
+}
+
+// ── Called every render tick — speaks ONCE per level-rise ────────────
+function maybeSpeak(frame) {
   if (!window.speechSynthesis) return;
-  try {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const langMap = { en: 'en-US', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN' };
-    utterance.lang = langMap[langCode] || 'en-US';
-    utterance.volume = 1.0;
-    utterance.rate = 0.85; 
-    window.speechSynthesis.speak(utterance);
-  } catch (err) {
-    console.error("Speech error:", err);
+  const op   = frame.operator;
+  const lang = op.language || 'en';
+  const lc   = LANG_CODE[lang] || 'en-IN';
+
+  // Operator switch: welcome in new language, reset state
+  if (op.id !== _voiceLastOpId) {
+    _voiceLastOpId  = op.id;
+    _voiceLastLevel = 0;
+    _voiceLastType  = null;
+    if (op.hearing !== 'impaired') {
+      const wFn = VOICE_WELCOME[lang] || VOICE_WELCOME['en'];
+      _speak(wFn(op.name.split(' ')[0]), lc);
+    }
+    return;
   }
+
+  const level = frame.alert.level;
+  const atype = _getAlertType(frame);
+
+  // Reset when all-clear
+  if (level <= 0) { _voiceLastLevel = 0; _voiceLastType = null; return; }
+  // Skip re-speaking same level + same type
+  if (level === _voiceLastLevel && atype === _voiceLastType) return;
+  // Only speak on rising level (or type change at same/higher level)
+  if (level < _voiceLastLevel) return;
+
+  // Hearing-impaired: visual flash is primary; voice is supplementary
+  const phrases = VOICE_PHRASES[lang] || VOICE_PHRASES['en'];
+  const text    = phrases[atype];
+  if (text) _speak(text, lc);
+
+  _voiceLastLevel = level;
+  _voiceLastType  = atype;
+}
+
+// ── Test Voice button: speaks active operator's L3 fatigue phrase ─────
+function testVoice() {
+  const op = _allProfiles[_activeOpId];
+  if (!op) { console.warn('[Voice] No active operator'); return; }
+  if (!window.speechSynthesis) { alert('Web Speech API not supported in this browser'); return; }
+  if (!_voiceEnabled) { alert('Tap "Enable alerts + voice" button first'); return; }
+  const lang = op.language || 'en';
+  const lc   = LANG_CODE[lang] || 'en-IN';
+  const phr  = VOICE_PHRASES[lang] || VOICE_PHRASES['en'];
+  _speak(phr['fatigue_emergency'], lc);
 }
 
 // ── Manual Test Alert ─────────────────────────────────────────────────────
@@ -913,7 +1056,8 @@ function render(f){
   if (isColourBlind !== _cbMode) setCbMode(isColourBlind);
 
   // Play Speech announcements
-  handleVoiceAlert(f.alert.level, op);
+  // Voice alert: fires once per level-rise via Web Speech API
+  maybeSpeak(f);
 
   // Highlight active operator button/row in directory
   if (op.id !== _activeOpId) {
