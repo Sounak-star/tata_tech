@@ -883,7 +883,8 @@ function getPersonalAdvice(op, alertLevel) {
 
 // ── WebSocket ────────────────────────────────────────────────────────────
 function connect(){
-  ws = new WebSocket(`ws://${location.host}/ws`);
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
   ws.onopen  = ()=>{ document.getElementById('conn').textContent='● live'; ws.send('hi'); };
   ws.onclose = ()=>{ document.getElementById('conn').textContent='● disconnected';
                      setTimeout(connect, 1000); };
