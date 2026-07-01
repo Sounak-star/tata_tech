@@ -4,8 +4,12 @@ FROM python:3.10-slim
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
-    libgles2-mesa \
+    libgles2 \
     libegl1 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    libgl1-mesa-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Hugging Face Spaces require running as a non-root user
