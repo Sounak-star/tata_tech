@@ -99,6 +99,15 @@ async def _loop() -> None:
             jpeg = remote_tracker.get_latest_annotated_frame()
             if jpeg:
                 frame["cam_frame"] = base64.b64encode(jpeg).decode("ascii")
+                
+        # Inject debugging info for the dashboard
+        frame["cam_status"] = {
+            "has_mediapipe": HAS_MEDIAPIPE,
+            "tracker_exists": remote_tracker is not None,
+            "is_available": remote_tracker.is_available if remote_tracker else False,
+            "error": getattr(remote_tracker, "last_error", "No tracker") if remote_tracker else "No tracker"
+        }
+            
         await hub.broadcast(frame)
         await asyncio.sleep(1.0 / TICK_HZ)
 

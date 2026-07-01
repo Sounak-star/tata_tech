@@ -447,6 +447,7 @@
           </button>
           <div id="camStatusTxt" style="font-size:11px; color:var(--muted);">Click to allow webcam access</div>
         </div>
+        <div id="camDebug" style="font-size:10px; color:var(--amber); text-align:center; margin-top:4px;"></div>
       </div>
       <!-- Blind-Spot preview -->
       <div class="card" id="bsWrap" style="grid-row:1/3; display:flex; flex-direction:column; padding:0; overflow:hidden;">
@@ -975,6 +976,12 @@ function render(f){
     if (camVideo && camVideo.style.display !== 'none') {
       camVideo.style.display = 'none';
     }
+  }
+
+  // ── debug info ────────────────────────────────────────────────────────
+  if (f.cam_status) {
+    document.getElementById('camDebug').textContent = 
+      `Debug: MP=${f.cam_status.has_mediapipe} | Avail=${f.cam_status.is_available} | Err=${f.cam_status.error}`;
   }
 
   // ── operator ────────────────────────────────────────────────────────

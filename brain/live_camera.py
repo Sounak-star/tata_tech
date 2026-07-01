@@ -509,6 +509,7 @@ class RemoteCameraTracker:
         _, _ph_buf = cv2.imencode('.jpg', _ph)
         self._latest_annotated_frame: bytes = _ph_buf.tobytes()
 
+        self.last_error = None
         self._landmarker = None
         self._frame_idx = 0
         self._window_idx = 0
@@ -539,8 +540,10 @@ class RemoteCameraTracker:
 
                 self._landmarker = FaceLandmarker.create_from_options(options)
                 self.is_available = True
+                self.last_error = "Init successful"
                 print("[RemoteCamera] MediaPipe ready for browser frames.", flush=True)
             except Exception as e:
+                self.last_error = f"Init error: {e}"
                 print(f"[RemoteCamera] Failed to init MediaPipe: {e}", flush=True)
 
     def feed_frame(self, jpeg_bytes: bytes) -> None:
@@ -632,8 +635,10 @@ class RemoteCameraTracker:
                     )
                 self._window_idx += 1
                 self._window_frames = []
+                self.last_error = "Frames processing fine"
 
         except Exception as e:
+            self.last_error = f"Frame error: {e}"
             print(f"[RemoteCamera] Frame processing error: {e}", flush=True)
 
     def get_latest_features(self) -> Optional[Dict[str, float]]:
