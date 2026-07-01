@@ -486,3 +486,216 @@ class BackgroundCameraTracker:
                             )
                         window_idx += 1
                         window_frames = []
+
+
+class RemoteCameraTracker:
+    """
+    Processes JPEG frames sent from the browser via WebSocket.
+    Same interface as BackgroundCameraTracker but no local webcam needed.
+    Frames are fed in via feed_frame(jpeg_bytes).
+    """
+
+    def __init__(self) -> None:
+        self.latest_features: Optional[Dict[str, float]] = None
+        self._lock = threading.Lock()
+
+        self._preview_lock = threading.Lock()
+        self._fatigue_overlay: dict = {"p_pct": 0, "decision": "—", "severity": "OK"}
+
+        # Placeholder frame
+        _ph = np.full((240, 320, 3), 40, dtype=np.uint8)
+        cv2.putText(_ph, "Waiting for browser cam...", (18, 125),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (160, 160, 160), 1, cv2.LINE_AA)
+        _, _ph_buf = cv2.imencode('.jpg', _ph)
+        self._latest_annotated_frame: bytes = _ph_buf.tobytes()
+
+        self._landmarker = None
+        self._frame_idx = 0
+        self._window_idx = 0
+        self._fps = 5.0  # approximate incoming frame rate from browser
+
+        self._frames_per_window = max(1, int(WINDOW_SEC * self._fps))
+        self._frames_per_lookback = int(PERCLOS_LOOKBACK_SEC * self._fps)
+        self._trailing_buffer: deque = deque(maxlen=self._frames_per_lookback)
+        self._window_frames: list = []
+
+        self.is_available = False
+
+        if HAS_MEDIAPIPE:
+            try:
+                if not os.path.exists(MODEL_PATH):
+                    print(f"[RemoteCamera] Downloading MediaPipe model to {MODEL_PATH}...")
+                    urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+
+                BaseOptions = mp.tasks.BaseOptions
+                FaceLandmarker = mp.tasks.vision.FaceLandmarker
+                FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
+                VisionRunningMode = mp.tasks.vision.RunningMode
+
+                options = FaceLandmarkerOptions(
+                    base_options=BaseOptions(model_asset_path=MODEL_PATH),
+                    running_mode=VisionRunningMode.VIDEO,
+                    num_faces=1)
+
+                self._landmarker = FaceLandmarker.create_from_options(options)
+                self.is_available = True
+                print("[RemoteCamera] MediaPipe ready for browser frames.", flush=True)
+            except Exception as e:
+                print(f"[RemoteCamera] Failed to init MediaPipe: {e}", flush=True)
+
+    def feed_frame(self, jpeg_bytes: bytes) -> None:
+        """Decode a JPEG from the browser, run MediaPipe, extract features."""
+        if not self.is_available or self._landmarker is None:
+            return
+
+        try:
+            arr = np.frombuffer(jpeg_bytes, dtype=np.uint8)
+            frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+            if frame is None:
+                return
+
+            self._frame_idx += 1
+            time_sec = self._frame_idx / self._fps
+            timestamp_ms = int(time_sec * 1000)
+
+            height, width = frame.shape[:2]
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+
+            results = self._landmarker.detect_for_video(mp_image, timestamp_ms)
+
+            # ── Annotated preview ──
+            if results.face_landmarks and len(results.face_landmarks) > 0:
+                _lm = results.face_landmarks[0]
+                _ear = calculate_ear(_lm, width, height)
+            else:
+                _lm = None
+                _ear = 0.0
+
+            ann = self._annotate_frame(frame, _lm, _ear, height, width)
+            _ok, _buf = cv2.imencode('.jpg', ann, [cv2.IMWRITE_JPEG_QUALITY, 75])
+            if _ok:
+                with self._preview_lock:
+                    self._latest_annotated_frame = _buf.tobytes()
+
+            # ── Feature extraction (every frame since browser sends ~5 fps) ──
+            frame_data = {
+                'time_sec': time_sec, 'has_face': False,
+                'ear': np.nan, 'mar': np.nan, 'pitch': np.nan,
+                'yaw': np.nan, 'roll': np.nan
+            }
+
+            if results.face_landmarks and len(results.face_landmarks) > 0:
+                landmarks = results.face_landmarks[0]
+                frame_data['has_face'] = True
+                frame_data['ear'] = calculate_ear(landmarks, width, height)
+                frame_data['mar'] = calculate_mar(landmarks, width, height)
+                pitch, yaw, roll = calculate_head_pose(landmarks, width, height)
+                frame_data['pitch'] = pitch
+                frame_data['yaw'] = yaw
+                frame_data['roll'] = roll
+
+            self._trailing_buffer.append(frame_data)
+            self._window_frames.append(frame_data)
+
+            if len(self._window_frames) >= self._frames_per_window / max(1, FRAME_SAMPLE_RATE):
+                row = aggregate_window(
+                    self._window_frames, self._trailing_buffer,
+                    fold=0, subject_id="remote", video_name="browser",
+                    window_idx=self._window_idx, label=0
+                )
+                feats_valid = not np.isnan(row.get("ear_mean", np.nan))
+                if feats_valid:
+                    candidate = {
+                        "ear_mean":   row["ear_mean"],
+                        "ear_min":    row["ear_min"],
+                        "ear_std":    row["ear_std"],
+                        "perclos":    row["perclos"],
+                        "blink_rate": row["blink_rate"],
+                        "mar_mean":   row["mar_mean"],
+                        "mar_max":    row["mar_max"],
+                        "is_yawn":    row["is_yawn"],
+                        "pitch_mean": row["pitch_mean"],
+                        "yaw_mean":   row["yaw_mean"],
+                        "roll_mean":  row["roll_mean"],
+                        "pitch_std":  row["pitch_std"],
+                        "is_warming_up": float(self._window_idx < 3),
+                    }
+                    with self._lock:
+                        self.latest_features = candidate
+                    print(
+                        f"[RemoteCamera win {self._window_idx}] VALID "
+                        f"EAR={row['ear_mean']:.3f} "
+                        f"PERCLOS={row['perclos']:.3f} "
+                        f"MAR={row['mar_mean']:.3f}",
+                        flush=True
+                    )
+                self._window_idx += 1
+                self._window_frames = []
+
+        except Exception as e:
+            print(f"[RemoteCamera] Frame processing error: {e}", flush=True)
+
+    def get_latest_features(self) -> Optional[Dict[str, float]]:
+        with self._lock:
+            return self.latest_features
+
+    def get_latest_annotated_frame(self) -> Optional[bytes]:
+        with self._preview_lock:
+            return self._latest_annotated_frame
+
+    def set_fatigue_info(self, fatigue: dict) -> None:
+        with self._preview_lock:
+            self._fatigue_overlay = {
+                "p_pct":    int(fatigue.get("p", 0) * 100),
+                "decision": fatigue.get("decision", "—"),
+                "severity": fatigue.get("severity", "OK"),
+            }
+
+    def _annotate_frame(self, frame, landmarks, ear, height, width):
+        """Draw face mesh + overlay onto a BGR copy of frame."""
+        img = frame.copy()
+
+        if landmarks is not None:
+            eye_open = ear >= EAR_CLOSED_THRESH
+            mesh_col = (0, 200, 0)
+            eye_col = (0, 200, 0) if eye_open else (30, 30, 220)
+            eye_label = f"EAR {ear:.3f}  EYES {'OPEN' if eye_open else 'CLOSED'}"
+
+            for lm in landmarks:
+                cv2.circle(img, (int(lm.x * width), int(lm.y * height)),
+                           1, mesh_col, -1)
+            for idx in LEFT_EYE_INDICES + RIGHT_EYE_INDICES:
+                lm = landmarks[idx]
+                cv2.circle(img, (int(lm.x * width), int(lm.y * height)),
+                           4, eye_col, -1)
+        else:
+            eye_col = (140, 140, 140)
+            eye_label = "NO FACE DETECTED"
+
+        with self._preview_lock:
+            ov = dict(self._fatigue_overlay)
+
+        p_pct = ov["p_pct"]
+        decision = ov["decision"]
+        severity = ov["severity"]
+        fat_col = ((30, 30, 220) if severity == "STRONG"
+                   else (30, 130, 255) if decision == "AT-RISK"
+                   else (30, 200, 30))
+
+        cv2.rectangle(img, (0, 0), (width, 30), (18, 18, 18), -1)
+        cv2.putText(img, eye_label, (8, 21),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.58, eye_col, 1, cv2.LINE_AA)
+
+        cv2.rectangle(img, (0, height - 36), (width, height), (18, 18, 18), -1)
+        cv2.putText(img, f"FATIGUE {p_pct}%  {decision}  {severity}",
+                    (8, height - 12),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.58, fat_col, 1, cv2.LINE_AA)
+
+        return img
+
+    def stop(self):
+        if self._landmarker:
+            self._landmarker.close()
+            self._landmarker = None
+

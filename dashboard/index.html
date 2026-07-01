@@ -430,14 +430,22 @@
       <!-- Camera preview -->
       <div class="card" id="camWrap">
         <h2 style="padding:10px 14px 6px; margin:0;">Camera preview</h2>
-        <img id="camPreview" src="/video_feed"
-             alt="Live camera feed"
-             onerror="this.style.display='none';
-                      document.getElementById('camMsg').style.display='block';">
-        <div id="camMsg"
-             style="display:none; padding:18px 12px; color:var(--muted);
-                    text-align:center; font-size:12px;">
-          Camera not available
+        <!-- Browser webcam live video (shown immediately on grant) -->
+        <video id="camVideo" autoplay playsinline muted
+               style="width:100%; display:none; border-radius:0 0 8px 8px; background:#000;"></video>
+        <!-- Annotated MJPEG from server (shown after AI processes frames) -->
+        <img id="camPreview" alt="Annotated camera feed" style="width:100%; display:none;">
+        <!-- Hidden canvas for JPEG encoding -->
+        <canvas id="camCanvas" style="display:none;"></canvas>
+        <!-- Grant camera button -->
+        <div id="camMsg" style="padding:14px 12px; text-align:center; font-size:12px;">
+          <button id="camGrantBtn"
+                  style="background:#1f6feb; color:#fff; border:none; border-radius:8px;
+                         padding:8px 18px; font-size:13px; font-weight:600; cursor:pointer;
+                         display:block; margin:0 auto 6px;">
+            📷 Enable Camera
+          </button>
+          <div id="camStatusTxt" style="font-size:11px; color:var(--muted);">Click to allow webcam access</div>
         </div>
       </div>
       <!-- Blind-Spot preview -->
@@ -890,6 +898,72 @@ function connect(){
                      setTimeout(connect, 1000); };
   ws.onmessage = e => render(JSON.parse(e.data));
 }
+
+// ── Browser Webcam → Server Streaming ───────────────────────────────────
+let _camStream = null;
+let _camSendInterval = null;
+
+async function startBrowserCam() {
+  const btn = document.getElementById('camGrantBtn');
+  const statusTxt = document.getElementById('camStatusTxt');
+  const video = document.getElementById('camVideo');
+  const canvas = document.getElementById('camCanvas');
+  const msg = document.getElementById('camMsg');
+
+  btn.disabled = true;
+  statusTxt.textContent = 'Requesting camera access...';
+
+  try {
+    _camStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+      audio: false
+    });
+    video.srcObject = _camStream;
+    await video.play();
+
+    // Show the live video preview immediately
+    video.style.display = 'block';
+    msg.style.display = 'none';
+
+    // Set canvas to match video dimensions
+    video.addEventListener('loadedmetadata', () => {
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+    });
+
+    // Send frames to server at ~5 fps via WebSocket
+    _camSendInterval = setInterval(() => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      if (!video.videoWidth) return;
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      canvas.toBlob(blob => {
+        if (blob && ws && ws.readyState === WebSocket.OPEN) {
+          blob.arrayBuffer().then(buf => ws.send(buf));
+        }
+      }, 'image/jpeg', 0.7);
+    }, 200); // 5 fps
+
+    // After a short delay, also show the annotated server preview
+    setTimeout(() => {
+      const annotated = document.getElementById('camPreview');
+      annotated.src = '/video_feed?' + Date.now();
+      annotated.style.display = 'block';
+      annotated.onerror = () => { annotated.style.display = 'none'; };
+    }, 5000);
+
+    statusTxt.textContent = 'Camera active — streaming to AI';
+  } catch (err) {
+    btn.disabled = false;
+    statusTxt.textContent = 'Camera denied: ' + err.message;
+    msg.style.display = 'block';
+    console.warn('Camera access failed:', err);
+  }
+}
+
+document.getElementById('camGrantBtn').addEventListener('click', startBrowserCam);
 
 // ── Main Render Tick ─────────────────────────────────────────────────────
 let compliance = 96.0;
