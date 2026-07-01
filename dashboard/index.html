@@ -969,6 +969,12 @@ function render(f){
     const camPreview = document.getElementById('camPreview');
     camPreview.src = 'data:image/jpeg;base64,' + f.cam_frame;
     camPreview.style.display = 'block';
+    
+    // Hide the raw webcam video so the annotated one takes its place
+    const camVideo = document.getElementById('camVideo');
+    if (camVideo && camVideo.style.display !== 'none') {
+      camVideo.style.display = 'none';
+    }
   }
 
   // ── operator ────────────────────────────────────────────────────────
