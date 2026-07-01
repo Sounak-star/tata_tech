@@ -946,14 +946,6 @@ async function startBrowserCam() {
       }, 'image/jpeg', 0.7);
     }, 200); // 5 fps
 
-    // After a short delay, also show the annotated server preview
-    setTimeout(() => {
-      const annotated = document.getElementById('camPreview');
-      annotated.src = '/video_feed?' + Date.now();
-      annotated.style.display = 'block';
-      annotated.onerror = () => { annotated.style.display = 'none'; };
-    }, 5000);
-
     statusTxt.textContent = 'Camera active — streaming to AI';
   } catch (err) {
     btn.disabled = false;
@@ -971,6 +963,13 @@ let compliance = 96.0;
 function render(f){
   document.getElementById('phase').textContent =
     f.phase ? ('machine: '+f.phase+' │ fatigue: LIVE') : 'fatigue: LIVE';
+
+  // ── camera frame from websocket ─────────────────────────────────────
+  if (f.cam_frame) {
+    const camPreview = document.getElementById('camPreview');
+    camPreview.src = 'data:image/jpeg;base64,' + f.cam_frame;
+    camPreview.style.display = 'block';
+  }
 
   // ── operator ────────────────────────────────────────────────────────
   const op = f.operator;

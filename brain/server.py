@@ -13,6 +13,7 @@ Run:
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 from typing import List
 
@@ -93,6 +94,11 @@ async def _loop() -> None:
             tracker.set_fatigue_info(frame["fatigue"])
         if remote_tracker and remote_tracker.is_available:
             remote_tracker.set_fatigue_info(frame["fatigue"])
+            # Piggyback the annotated frame onto the WS broadcast so the
+            # dashboard can show the face-mesh overlay without MJPEG streaming
+            jpeg = remote_tracker.get_latest_annotated_frame()
+            if jpeg:
+                frame["cam_frame"] = base64.b64encode(jpeg).decode("ascii")
         await hub.broadcast(frame)
         await asyncio.sleep(1.0 / TICK_HZ)
 
