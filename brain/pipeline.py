@@ -41,6 +41,10 @@ class Brain:
         self.store = store or ProfileStore()
         self.faceid = FaceID(self.store)
         self.fatigue = FatigueEngine(calibration_rows)
+        # The engine this session started with. Restored whenever the active
+        # operator has no personal baseline of their own.
+        self._session_fatigue = self.fatigue
+        self.calibration_source = "session"
         self.persons = PersonDetector()
         self.engine = HybridDecisionEngine()
         self.log = event_log or EventLog()
@@ -50,10 +54,47 @@ class Brain:
         # An entry is written ONCE per rising edge (level > _prev_level), not every tick.
         self._prev_level = 0
 
-    def switch_operator(self, operator_id: str) -> dict:
+    def switch_operator(self, operator_id: str, *, source: str = "manual") -> dict:
+        """Make `operator_id` active and re-personalise everything downstream.
+
+        If the operator was enrolled in-cab, their fatigue baseline is already on
+        file — we rebuild the fatigue engine from it and skip calibration
+        entirely.  If they have no stored baseline we fall back to the engine
+        this session started with; we must NOT keep the previous operator's
+        personal baseline, which would silently read the new face against the
+        wrong normal.
+        """
         prof = self.store.switch(operator_id)
         self.engine.reset()
+
+        baseline = self.store.baseline_for(operator_id)
+        if baseline:
+            engine = FatigueEngine.from_baseline(baseline)
+            if engine is not None:
+                self.fatigue = engine
+                self.calibration_source = f"enrolment:{operator_id}"
+                print(f"[Brain] {operator_id} ({source}) — personal baseline loaded, "
+                      f"calibration skipped.", flush=True)
+                return prof
+
+        if self.fatigue is not self._session_fatigue:
+            # Coming off someone else's personal baseline — go back to the
+            # session default rather than judging this operator by that one.
+            self.fatigue = self._session_fatigue
+            self.calibration_source = "session"
         self.fatigue.reset()
+        return prof
+
+    def switch_to_guest(self, reason: str = "unidentified") -> dict:
+        """Fail-safe profile for an unrecognised operator."""
+        prof = self.store.switch_to_guest()
+        self.engine.reset()
+        if self.fatigue is not self._session_fatigue:
+            self.fatigue = self._session_fatigue
+            self.calibration_source = "session"
+        self.fatigue.reset()
+        print(f"[Brain] operator unidentified ({reason}) — conservative profile.",
+              flush=True)
         return prof
 
     def tick(self, signal: dict) -> dict:

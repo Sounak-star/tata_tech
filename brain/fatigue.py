@@ -109,6 +109,56 @@ class FatigueEngine:
             print(f"[FatigueEngine] XGBoost unavailable ({exc}); using fallback heuristic.",
                   file=sys.stderr, flush=True)
 
+    # ── personal baseline from enrolment ────────────────────────────────
+    @classmethod
+    def from_baseline(cls, baseline: Dict[str, dict]) -> Optional["FatigueEngine"]:
+        """Build an engine from a baseline captured at enrolment.
+
+        This is what lets face recognition skip the 25-second calibration: the
+        operator already sat through it once, in this cab, on this camera, and
+        the result was stored on their profile.
+
+        Returns None if the stored baseline is incomplete or malformed — the
+        caller must then fall back to a live calibration.  Spending 25 seconds
+        is always better than running a live operator against a broken baseline.
+        """
+        try:
+            from fatigue_monitor import FatigueMonitor
+        except Exception as exc:  # noqa: BLE001
+            print(f"[FatigueEngine] cannot use stored baseline ({exc}).",
+                  file=sys.stderr, flush=True)
+            return None
+
+        if not isinstance(baseline, dict):
+            return None
+        missing = [f for f in FEATURES if f not in baseline]
+        if missing:
+            print(f"[FatigueEngine] stored baseline is missing {missing} — "
+                  f"falling back to live calibration.", file=sys.stderr, flush=True)
+            return None
+
+        try:
+            clean = {f: {"mean": float(baseline[f]["mean"]), "std": float(baseline[f]["std"])}
+                     for f in FEATURES}
+        except (KeyError, TypeError, ValueError) as exc:
+            print(f"[FatigueEngine] stored baseline is malformed ({exc}) — "
+                  f"falling back to live calibration.", file=sys.stderr, flush=True)
+            return None
+
+        self = cls.__new__(cls)
+        self.backend = "xgboost"
+        self._monitor = None
+        try:
+            self._monitor = FatigueMonitor(clean, smooth_window=3)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[FatigueEngine] FatigueMonitor rejected the stored baseline ({exc}).",
+                  file=sys.stderr, flush=True)
+            return None
+
+        print(f"[FatigueEngine] Baseline (ENROLMENT, {len(clean)} features) — "
+              f"calibration skipped.", file=sys.stderr, flush=True)
+        return self
+
     # ── public ──────────────────────────────────────────────────────────
     def update(self, features: Dict[str, float]) -> dict:
         if self._monitor is not None:

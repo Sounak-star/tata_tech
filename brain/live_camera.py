@@ -38,7 +38,33 @@ MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/fac
 MODEL_PATH = "face_landmarker.task"
 
 
-class BackgroundCameraTracker:
+class FaceObserverMixin:
+    """Lets face-ID / enrolment reuse the frame the tracker has already decoded
+    and landmarked, instead of standing up a second camera pipeline.
+
+    The observer is called on the tracker thread, so it must be quick and it
+    must never raise — an exception here would take the fatigue pipeline down
+    with it, which is a safety regression for a cosmetic feature.
+    """
+
+    face_observer = None
+
+    def set_face_observer(self, fn) -> None:
+        self.face_observer = fn
+
+    def _notify_face(self, frame, landmarks, has_face: bool,
+                     ear: float = 0.0, yaw: float = 0.0, pitch: float = 0.0) -> None:
+        fn = self.face_observer
+        if fn is None:
+            return
+        try:
+            fn(frame, landmarks, has_face=has_face, ear=float(ear or 0.0),
+               yaw=float(yaw or 0.0), pitch=float(pitch or 0.0))
+        except Exception as exc:                      # noqa: BLE001
+            print(f"[Camera] face observer error (ignored): {exc}", flush=True)
+
+
+class BackgroundCameraTracker(FaceObserverMixin):
     """Runs cv2.VideoCapture and MediaPipe FaceLandmarker in a daemon thread."""
 
     def __init__(self, camera_index: int = 0) -> None:
@@ -441,6 +467,10 @@ class BackgroundCameraTracker:
                         frame_data['pitch'] = pitch
                         frame_data['yaw'] = yaw
                         frame_data['roll'] = roll
+                        self._notify_face(frame, landmarks, True,
+                                          frame_data['ear'], yaw, pitch)
+                    else:
+                        self._notify_face(None, None, False)
 
                     trailing_buffer.append(frame_data)
                     window_frames.append(frame_data)
@@ -488,7 +518,7 @@ class BackgroundCameraTracker:
                         window_frames = []
 
 
-class RemoteCameraTracker:
+class RemoteCameraTracker(FaceObserverMixin):
     """
     Processes JPEG frames sent from the browser via WebSocket.
     Same interface as BackgroundCameraTracker but no local webcam needed.
@@ -597,6 +627,10 @@ class RemoteCameraTracker:
                 frame_data['pitch'] = pitch
                 frame_data['yaw'] = yaw
                 frame_data['roll'] = roll
+                self._notify_face(frame, landmarks, True,
+                                  frame_data['ear'], yaw, pitch)
+            else:
+                self._notify_face(None, None, False)
 
             self._trailing_buffer.append(frame_data)
             self._window_frames.append(frame_data)

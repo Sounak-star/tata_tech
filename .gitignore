@@ -21,3 +21,11 @@ training/**/*.tfevents.*
 
 # Downloaded models
 face_landmarker.task
+
+# Face ID — key material, biometric templates and supervisor PIN hashes.
+# None of this may ever be committed: templates are personal data under the
+# DPDP Act, and the key file is what protects them.
+data/faceid.key
+data/templates.enc
+data/supervisors.json
+arcface_r50.onnx

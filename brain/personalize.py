@@ -28,6 +28,10 @@ _PHRASES: Dict[str, Dict[int, str]] = {
            3: "అత్యవసరం — యంత్రం ఆగుతోంది."},
 }
 
+# The languages the enrolment form may offer — derived from the phrase table so
+# the two can never drift apart.
+SUPPORTED_LANGUAGES = tuple(_PHRASES)
+
 # Colour-safe vs standard palettes (hex).
 _PALETTE_STANDARD = {1: "#FFC107", 2: "#FF9800", 3: "#F44336"}
 _PALETTE_COLORSAFE = {1: "#90CAF9", 2: "#1E88E5", 3: "#0D47A1"}
@@ -42,6 +46,9 @@ def personalise(level: int, profile: dict) -> dict:
     colorsafe = profile.get("color_vision", "normal") != "normal"
     hearing_impaired = profile.get("hearing") == "impaired"
     trainee = profile.get("experience") == "trainee"
+    # Unidentified operator: we cannot know which channel reaches them, so use
+    # every one of them from level 1. Set by the guest/fail-safe profile only.
+    all_channels = bool(profile.get("all_channels"))
 
     palette = _PALETTE_COLORSAFE if colorsafe else _PALETTE_STANDARD
     phrases = _PHRASES.get(lang, _PHRASES["en"])
@@ -49,14 +56,15 @@ def personalise(level: int, profile: dict) -> dict:
     return {
         "level": level,
         # Hearing-impaired: always buzz + flash; others escalate with level.
-        "buzz": True if hearing_impaired else level >= 2,
-        "buzz_strength": "strong" if (hearing_impaired or level >= 3) else "soft",
-        "flash": True if hearing_impaired else level >= 2,
+        "buzz": True if (hearing_impaired or all_channels) else level >= 2,
+        "buzz_strength": "strong" if (hearing_impaired or all_channels or level >= 3) else "soft",
+        "flash": True if (hearing_impaired or all_channels) else level >= 2,
         "color": palette.get(level, palette[max(palette)]),
         "use_icons": colorsafe,
         "text": phrases.get(level, ""),
         "voice_clip": f"{lang}_level{level}.mp3",
         "language": lang,
         "simplified_ui": trainee,
-        "sound": not hearing_impaired,
+        # An unknown operator still gets sound — all_channels means all of them.
+        "sound": all_channels or not hearing_impaired,
     }

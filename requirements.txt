@@ -29,5 +29,11 @@ tensorboard>=2.15           # PPO convergence monitoring
 opencv-python-headless>=4.8  # camera capture (headless = no GUI deps, works on servers)
 mediapipe>=0.10           # face landmarks -> 12 fatigue features
 ultralytics>=8.1          # YOLO11-nano person detection (blind-spot zones)
-# deepface>=0.0.90          # face-ID operator recognition
-# onnxruntime>=1.17         # quantized model runtime (edge proof)
+
+# ── Face ID (operator recognition + in-cab enrolment) ──────────────────────
+# DeepFace is deliberately NOT used: it pulls TensorFlow (~500 MB), which defeats
+# the point on an edge device. ArcFace as a single ONNX file is ~170 MB and runs
+# on CPU in tens of milliseconds. Fetch the model once with:
+#     python -m brain.faceid --download
+onnxruntime>=1.17         # ArcFace embedder (CPU)
+cryptography>=42.0        # AES-GCM at rest for the template store (required)
