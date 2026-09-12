@@ -30,6 +30,7 @@ from .demo_source import DemoSource, HybridLiveSource
 from .enrollment import EnrollmentSession, OperatorDetails, SupervisorAuth
 from .pipeline import Brain
 from .live_camera import BackgroundCameraTracker, RemoteCameraTracker, HAS_MEDIAPIPE
+from .pose import PoseTracker
 from .blindspot import BackgroundBlindspotTracker
 
 TICK_HZ = 6.0  # readable playback rate for the demo (raise toward 10 for "live")
@@ -51,6 +52,10 @@ else:
     brain = Brain()
     source = DemoSource()
 
+
+# Posture fallback. Shares the frames the face pipeline already decodes and
+# runs at a low duty cycle — posture changes over seconds, not frames.
+pose_tracker = PoseTracker(every_n=2) if HAS_MEDIAPIPE else None
 
 # ── face ID + enrolment state ───────────────────────────────────────────
 MACHINE_ID = os.environ.get("SAARTHI_MACHINE_ID", "local")
@@ -94,6 +99,14 @@ def _check_token(token: str) -> Optional[tuple]:
     return rec
 
 
+def _finite(x):
+    """JSON-safe float: inf/NaN become None."""
+    import math
+    if x is None or not math.isfinite(x):
+        return None
+    return round(float(x), 2)
+
+
 def _face_router(frame, landmarks, *, has_face: bool, ear: float = 0.0,
                  yaw: float = 0.0, pitch: float = 0.0) -> None:
     """Called by the camera thread for every landmarked frame.
@@ -103,14 +116,34 @@ def _face_router(frame, landmarks, *, has_face: bool, ear: float = 0.0,
     """
     global _pending_identity, _last_identify
 
+    # Pose runs whether or not the face is readable — that is the entire point,
+    # and it is also how we tell an occluded operator from an empty seat.
+    if pose_tracker is not None and frame is not None:
+        pose_tracker.observe(frame)
+
     with _enroll_lock:
         session = _enroll
+
+    # During the 25 s baseline the operator is sitting still and alert — exactly
+    # the posture we want as their reference. Same sitting, no extra step.
+    if (session is not None and session.step.value == "baseline"
+            and pose_tracker is not None and pose_tracker.available):
+        session.add_posture_sample(pose_tracker.latest)
+
     if session is not None and session.step.value == "poses":
         if has_face and frame is not None:
             session.feed_frame(frame, landmarks, yaw=yaw, pitch=pitch)
         return
 
     if not brain.faceid.auto_enabled:
+        return
+
+    # An occluded operator is not an empty seat. Without this, sunglasses and a
+    # dust mask look exactly like the driver getting out, and the identity lock
+    # drops to the guest profile while they are still sitting there.
+    if (not has_face and pose_tracker is not None and pose_tracker.present
+            and brain.faceid.identifier is not None
+            and brain.faceid.identifier.operator_id is not None):
         return
 
     result = brain.faceid.observe(frame, landmarks, has_face=has_face, ear=ear)
@@ -169,12 +202,18 @@ async def _loop() -> None:
                 # Enrolled face with no profile record — safest is the guest profile.
                 brain.switch_to_guest(f"no profile for '{op_id}'")
 
-        # If remote tracker has features (browser cam), inject them into the signal
+        # If remote tracker has features (browser cam), inject them into the signal.
+        # get_latest_features() returns None once the last face window has expired,
+        # which is what lets the posture fallback take over instead of the pipeline
+        # silently reusing a stale reading.
         if remote_tracker and remote_tracker.is_available:
             remote_feats = remote_tracker.get_latest_features()
             if remote_feats is not None:
                 signal["features"] = remote_feats
                 signal["drowsiness"] = 0.0  # real features override demo drowsiness
+
+        if pose_tracker is not None and pose_tracker.available:
+            signal["pose"] = pose_tracker.latest
 
         frame = brain.tick(signal)
         frame["phase"] = signal.get("phase")
@@ -203,6 +242,9 @@ async def _loop() -> None:
             "calibration_source": brain.calibration_source,
             "guest": brain.store.is_guest,
         }
+        if pose_tracker is not None:
+            frame.setdefault("posture", {})["tracker"] = pose_tracker.status()
+
         with _enroll_lock:
             frame["enrolling"] = _enroll is not None and _enroll.step.value in ("poses", "baseline")
 
@@ -374,6 +416,7 @@ def api_health() -> JSONResponse:
         "fatigue_backend": brain.fatigue.backend,
         "person_backend": person_backend,
         "faceid_backend": brain.faceid.backend,
+        "pose_backend": pose_tracker.backend if pose_tracker else "unavailable",
         "tick_hz": TICK_HZ,
     })
 
@@ -393,6 +436,21 @@ def api_faceid_status() -> JSONResponse:
         "active_operator": brain.store.active_id,
         "guest": brain.store.is_guest,
         "calibration_source": brain.calibration_source,
+    })
+
+
+@app.get("/api/posture/status")
+def api_posture_status() -> JSONResponse:
+    return JSONResponse({
+        "tracker": pose_tracker.status() if pose_tracker else
+                   {"available": False, "error": "mediapipe unavailable"},
+        "mode": brain.posture_mode,
+        "reason": brain.posture_reason,
+        "baseline_ready": brain.posture.ready,
+        # features_age() is inf when no face window has ever landed, and inf is
+        # not JSON. None means "never seen", which is what the UI wants anyway.
+        "face_signal_age": _finite(remote_tracker.features_age()
+                                   if remote_tracker else None),
     })
 
 

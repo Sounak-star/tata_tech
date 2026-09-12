@@ -41,6 +41,8 @@ import numpy as np
 from .faceid import FaceEmbedder, Quality, assess_quality, l2
 from .paths import DATA
 from .personalize import SUPPORTED_LANGUAGES
+from .pose import PoseMetrics
+from .posture_fatigue import PostureBaseline, build_baseline
 from .templates import TemplateStore
 
 SUPERVISORS_JSON = Path(os.environ.get("SAARTHI_SUPERVISORS", str(DATA / "supervisors.json")))
@@ -295,6 +297,12 @@ class EnrollmentSession:
         self.baseline: Optional[dict] = None
         self.baseline_summary: Dict[str, float] = {}
         self.baseline_progress = 0        # windows captured so far
+        # Posture samples from the same sitting. The operator is already there
+        # and already still, so a seated-posture baseline costs nothing extra —
+        # and without one the posture fallback has no notion of this person's
+        # normal and will refuse to score them.
+        self.posture_samples: List[PoseMetrics] = []
+        self.posture_baseline: Optional[PostureBaseline] = None
         self.last_quality: Optional[Quality] = None
         self.rejected = 0
         self.error: Optional[str] = None
@@ -371,6 +379,11 @@ class EnrollmentSession:
             self.step = Step.BASELINE
 
     # ── baseline ────────────────────────────────────────────────────────
+    def add_posture_sample(self, metrics: PoseMetrics) -> None:
+        """Record one posture observation during the baseline capture."""
+        if metrics is not None and metrics.present:
+            self.posture_samples.append(metrics)
+
     def set_baseline(self, calibration_rows: List[dict]) -> dict:
         """Take the ALERT baseline from the same sitting.
 
@@ -408,6 +421,13 @@ class EnrollmentSession:
             "blink_rate_baseline": _mean("blink_rate"),
             "calibrated": True,
         }
+
+        # Posture is optional: a machine with no pose model still enrols fine,
+        # it just cannot fall back to posture for this operator later.
+        self.posture_baseline = build_baseline(self.posture_samples)
+        if self.posture_baseline is None and self.posture_samples:
+            print(f"[Enrol] only {len(self.posture_samples)} posture samples — "
+                  f"no posture baseline for this operator.", flush=True)
         self.step = Step.REVIEW
         return self.status("baseline captured")
 
@@ -445,6 +465,9 @@ class EnrollmentSession:
             warnings.append("both turn poses went the same way — pose variety is reduced")
         if self.baseline is None:
             warnings.append("full fatigue baseline unavailable; summary only")
+        if self.posture_baseline is None:
+            warnings.append("no posture baseline captured — this operator cannot "
+                            "be monitored while their face is covered")
         return {"vectors_kept": len(keep), "vectors_dropped": len(dropped),
                 "warnings": warnings,
                 "ready": len(keep) >= MIN_ACCEPTED_VECTORS and bool(self.baseline_summary)}
@@ -475,6 +498,9 @@ class EnrollmentSession:
                 k: {"mean": float(v["mean"]), "std": float(v["std"])}
                 for k, v in self.baseline.items()
             }
+        if self.posture_baseline is not None:
+            # Seated-posture normal, for the sunglasses/dust-mask fallback.
+            profile["calibration"]["posture"] = self.posture_baseline.as_dict()
         profile["enrolled"] = {
             "by": self.supervisor,
             "machine": self.machine_id,
@@ -511,6 +537,8 @@ class EnrollmentSession:
             "progress": [asdict(p) for p in self.progress],
             "captured": len(self.vectors),
             "baseline_progress": self.baseline_progress,
+            "posture_samples": len(self.posture_samples),
+            "posture_ready": self.posture_baseline is not None,
             "message": message,
             "quality": self.last_quality.as_dict() if self.last_quality else None,
             "error": self.error,

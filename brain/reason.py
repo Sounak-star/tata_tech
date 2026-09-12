@@ -27,6 +27,13 @@ _FEATURE_LABELS = {
 }
 
 
+_POSTURE_LABELS = {
+    "head_drop": "head dropping toward chest",
+    "slump": "shoulders slumping forward",
+    "sway": "swaying in the seat",
+}
+
+
 def build_reason_card(level: int, tier: str, hard_reason: str,
                       fatigue: dict, zone_name: str, tilt: dict) -> Optional[dict]:
     """Compose the Reason Card for the dominant cause of this alert."""
@@ -59,11 +66,24 @@ def build_reason_card(level: int, tier: str, hard_reason: str,
             "source": "rule",
         }
 
-    # Fatigue reason card with SHAP factors.
+    # Fatigue reason card. Posture-derived evidence is labelled as such: it is
+    # a weaker signal than PERCLOS and must never be presented as the same thing.
+    posture = fatigue.get("source") == "posture"
+    labels = _POSTURE_LABELS if posture else _FEATURE_LABELS
+
     factors = []
     for r in fatigue.get("reasons", [])[:3]:
-        label = _FEATURE_LABELS.get(r["feature"], r["feature"])
+        label = labels.get(r["feature"], r["feature"])
         factors.append({**r, "label": label})
+
+    if posture:
+        detail = (f"Face not visible — posture only. Drowsiness estimate "
+                  f"{int(p * 100)}%")
+        if factors:
+            detail += f" — {factors[0].get('text') or factors[0]['label']}"
+        return {"title": "Fatigue detected (posture)", "detail": detail,
+                "factors": factors, "source": "posture"}
+
     detail = f"Fatigue probability {int(p * 100)}%"
     if factors:
         top = factors[0]

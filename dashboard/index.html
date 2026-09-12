@@ -490,6 +490,15 @@
         <div class="muted" id="tiltStatus"></div>
       </div>
     </div>
+  <!-- Posture mode: shown when the face is hidden and we are reading the body
+       instead. Deliberately distinct styling — posture is weaker, later evidence
+       than PERCLOS and must never look like the same measurement. -->
+  <div id="postureBanner" style="display:none; margin:0 0 10px; padding:9px 13px;
+       border-radius:6px; background:#3a2600; color:#f0c674;
+       border:1px solid #5a4420; font-size:12.5px; line-height:1.5;">
+    <b>POSTURE MODE</b> — <span id="postureText">face not visible</span>
+  </div>
+
     
     <!-- Reason card -->
     <div class="card" style="flex-shrink: 0;">
@@ -1070,6 +1079,33 @@ function render(f){
     const camVideo = document.getElementById('camVideo');
     if (camVideo && camVideo.style.display !== 'none') {
       camVideo.style.display = 'none';
+    }
+  }
+
+  // ── posture mode banner ─────────────────────────────────────────────
+  if (f.posture) {
+    const pb = document.getElementById('postureBanner');
+    const pt = document.getElementById('postureText');
+    if (pb && pt) {
+      if (f.posture.mode) {
+        const s = f.posture.sigmas || {};
+        const bits = Object.entries(s)
+          .filter(([, v]) => v > 1)
+          .sort((a, b) => b[1] - a[1])
+          .map(([k, v]) => `${k.replace('_', ' ')} ${Number(v).toFixed(1)} SD`);
+        pt.textContent = f.posture.ready
+          ? (bits.length
+              ? `face not visible — reading posture: ${bits.join(', ')}`
+              : 'face not visible — posture normal, monitoring continues')
+          : 'face not visible and no posture baseline for this operator — '
+            + 'fatigue monitoring is DEGRADED';
+        pb.style.background = f.posture.ready ? '#3a2600' : '#3b0a0a';
+        pb.style.color = f.posture.ready ? '#f0c674' : '#ff9b95';
+        pb.style.borderColor = f.posture.ready ? '#5a4420' : '#5a2a2a';
+        pb.style.display = 'block';
+      } else {
+        pb.style.display = 'none';
+      }
     }
   }
 
