@@ -36,6 +36,14 @@
     --buzz-lvl3-border: #ffa726;
   }
 
+  .pchip {
+    padding:3px 8px; border-radius:10px; border:1px solid var(--line);
+    background:#0d1117; color:var(--muted); white-space:nowrap;
+  }
+  .pchip.ok   { color:#7ee2a0; border-color:#1f4a28; }
+  .pchip.warn { color:#f0c674; border-color:#5a4420; }
+  .pchip.bad  { color:#ff9b95; border-color:#5a2a2a; }
+
   /* ── Base & Viewport constraints (Just One Dashboard) ───────────── */
   * { box-sizing:border-box; }
   html, body {
@@ -493,6 +501,14 @@
   <!-- Posture mode: shown when the face is hidden and we are reading the body
        instead. Deliberately distinct styling — posture is weaker, later evidence
        than PERCLOS and must never look like the same measurement. -->
+  <div id="postureChips" style="display:flex; gap:5px; flex-wrap:wrap;
+       margin:0 0 10px; font-size:10.5px;">
+    <span class="pchip" id="chipFace">face: —</span>
+    <span class="pchip" id="chipBody">body: —</span>
+    <span class="pchip" id="chipBase">baseline: —</span>
+    <span class="pchip" id="chipMode">mode: —</span>
+  </div>
+
   <div id="postureBanner" style="display:none; margin:0 0 10px; padding:9px 13px;
        border-radius:6px; background:#3a2600; color:#f0c674;
        border:1px solid #5a4420; font-size:12.5px; line-height:1.5;">
@@ -1080,6 +1096,40 @@ function render(f){
     if (camVideo && camVideo.style.display !== 'none') {
       camVideo.style.display = 'none';
     }
+  }
+
+  // ── posture chain readout ───────────────────────────────────────────
+  if (f.posture) {
+    const set = (id, text, cls) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'pchip ' + cls;
+    };
+    const trk = f.posture.tracker || {};
+    const age = f.posture.face_age;
+
+    if (age === null || age === undefined) {
+      set('chipFace', 'face: never seen', 'bad');
+    } else if (age < 4) {
+      set('chipFace', `face: live (${age.toFixed(1)}s)`, 'ok');
+    } else {
+      set('chipFace', `face: LOST ${age.toFixed(0)}s`, 'warn');
+    }
+
+    if (!trk.available) {
+      set('chipBody', 'body: pose model off', 'bad');
+    } else if (f.posture.present) {
+      set('chipBody', `body: detected (${trk.detections || 0})`, 'ok');
+    } else {
+      set('chipBody', `body: none (${trk.frames_scored || 0} scanned)`, 'warn');
+    }
+
+    set('chipBase', f.posture.ready ? 'baseline: ready' : 'baseline: MISSING',
+        f.posture.ready ? 'ok' : 'bad');
+
+    set('chipMode', f.posture.mode ? 'mode: POSTURE' : 'mode: face',
+        f.posture.mode ? 'warn' : 'ok');
   }
 
   // ── posture mode banner ─────────────────────────────────────────────

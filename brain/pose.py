@@ -161,6 +161,8 @@ class PoseTracker:
         self._landmarker = None
         self._lock = threading.Lock()
         self._frame = 0
+        self._scored = 0
+        self._detections = 0
         self._ts_ms = 0
         self.latest = PoseMetrics()
 
@@ -242,6 +244,9 @@ class PoseTracker:
         lms = (result.pose_landmarks[0]
                if getattr(result, "pose_landmarks", None) else None)
         metrics = metrics_from_landmarks(lms)
+        self._scored += 1
+        if metrics.present:
+            self._detections += 1
         self._update_presence(metrics.present)
         self.latest = metrics
         return metrics
@@ -254,6 +259,12 @@ class PoseTracker:
     def status(self) -> dict:
         return {"available": self.available, "backend": self.backend,
                 "present": self._present, "error": self.last_error,
+                # Frame counters make "is this even running?" answerable without
+                # a debugger: frames_seen climbing but frames_scored flat means
+                # the pipeline is fine and detection is the problem.
+                "frames_seen": self._frame,
+                "frames_scored": self._scored,
+                "detections": self._detections,
                 "metrics": self.latest.as_dict()}
 
 

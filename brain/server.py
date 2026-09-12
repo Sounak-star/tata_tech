@@ -74,6 +74,37 @@ TOKEN_TTL_S = 900.0
 _pending_identity: Optional[tuple] = None
 _last_identify: dict = {}
 
+# Which camera is actually feeding us. Two trackers can be alive at once (the
+# local OpenCV one and the browser one) and they see DIFFERENT things, so face
+# features and posture must come from the same camera or we would be scoring one
+# person's posture against another camera's face. Whichever tracker last
+# delivered a frame is the operator camera.
+_source_seen: dict = {"remote": 0.0, "local": 0.0}
+ACTIVE_SOURCE_TIMEOUT = 3.0
+
+
+def _active_source_name() -> Optional[str]:
+    """Which camera is the operator camera right now.
+
+    Deterministic preference, not last-frame-wins: when both trackers are alive
+    they each deliver frames constantly, so "whoever spoke last" thrashes between
+    them and the fatigue source flips every tick. The browser stream wins while
+    it is live because connecting it is an explicit act by the operator; the
+    local camera is the fallback for a real cab install.
+    """
+    now = time.time()
+    for name in ("remote", "local"):
+        if now - _source_seen[name] <= ACTIVE_SOURCE_TIMEOUT:
+            return name
+    return None
+
+
+def _active_tracker():
+    name = _active_source_name()
+    if name is None:
+        return None
+    return remote_tracker if name == "remote" else tracker
+
 
 def auth() -> SupervisorAuth:
     """Built on first use — importing this module must not mint a PIN."""
@@ -108,13 +139,21 @@ def _finite(x):
 
 
 def _face_router(frame, landmarks, *, has_face: bool, ear: float = 0.0,
-                 yaw: float = 0.0, pitch: float = 0.0) -> None:
+                 yaw: float = 0.0, pitch: float = 0.0,
+                 source: str = "local") -> None:
     """Called by the camera thread for every landmarked frame.
 
     Enrolment takes priority over recognition — while a supervisor is enrolling
     somebody we must not also be trying to identify them.
     """
     global _pending_identity, _last_identify
+
+    _source_seen[source] = time.time()
+
+    # Only the operator camera drives identity and posture. A second tracker
+    # still running in the background must not inject its own view of the world.
+    if source != _active_source_name():
+        return
 
     # Pose runs whether or not the face is readable — that is the entire point,
     # and it is also how we tell an occluded operator from an empty seat.
@@ -202,15 +241,22 @@ async def _loop() -> None:
                 # Enrolled face with no profile record — safest is the guest profile.
                 brain.switch_to_guest(f"no profile for '{op_id}'")
 
-        # If remote tracker has features (browser cam), inject them into the signal.
-        # get_latest_features() returns None once the last face window has expired,
-        # which is what lets the posture fallback take over instead of the pipeline
-        # silently reusing a stale reading.
-        if remote_tracker and remote_tracker.is_available:
-            remote_feats = remote_tracker.get_latest_features()
-            if remote_feats is not None:
-                signal["features"] = remote_feats
-                signal["drowsiness"] = 0.0  # real features override demo drowsiness
+        # Face features come from the camera that is actually delivering frames,
+        # and from nowhere else. HybridLiveSource pre-fills signal["features"]
+        # from the LOCAL tracker; if the operator is on the browser camera that
+        # stale local reading would shadow everything, face_ok would never go
+        # false, and the posture fallback could never engage no matter what the
+        # operator did in front of the real camera.
+        active = _active_tracker()
+        if active is not None:
+            feats = active.get_latest_features()
+            if feats is not None:
+                signal["features"] = feats
+                signal["drowsiness"] = 0.0   # real features override the demo script
+            else:
+                # Expired or never seen: say so, rather than letting the other
+                # camera answer for this one.
+                signal.pop("features", None)
 
         if pose_tracker is not None and pose_tracker.available:
             signal["pose"] = pose_tracker.latest
@@ -244,6 +290,12 @@ async def _loop() -> None:
         }
         if pose_tracker is not None:
             frame.setdefault("posture", {})["tracker"] = pose_tracker.status()
+        # How stale the face signal is, so the dashboard can show the whole chain
+        # (face -> body -> baseline -> mode) instead of only the end result.
+        _act = _active_tracker()
+        frame.setdefault("posture", {})["face_age"] = _finite(
+            _act.features_age() if _act is not None else None)
+        frame["posture"]["camera"] = _active_source_name() or "none"
 
         with _enroll_lock:
             frame["enrolling"] = _enroll is not None and _enroll.step.value in ("poses", "baseline")
@@ -336,9 +388,11 @@ async def _calibrate_and_start_camera():
 async def _startup() -> None:
     # Face ID reuses the frames these trackers already decode and landmark.
     if HAS_MEDIAPIPE and tracker is not None:
-        tracker.set_face_observer(_face_router)
+        tracker.set_face_observer(
+            lambda *a, **kw: _face_router(*a, source="local", **kw))
     if remote_tracker is not None:
-        remote_tracker.set_face_observer(_face_router)
+        remote_tracker.set_face_observer(
+            lambda *a, **kw: _face_router(*a, source="remote", **kw))
     blindspot_tracker.start()
     asyncio.create_task(_calibrate_and_start_camera())
     asyncio.create_task(_loop())
@@ -449,8 +503,9 @@ def api_posture_status() -> JSONResponse:
         "baseline_ready": brain.posture.ready,
         # features_age() is inf when no face window has ever landed, and inf is
         # not JSON. None means "never seen", which is what the UI wants anyway.
-        "face_signal_age": _finite(remote_tracker.features_age()
-                                   if remote_tracker else None),
+        "camera": _active_source_name() or "none",
+        "face_signal_age": _finite(
+            _active_tracker().features_age() if _active_tracker() else None),
     })
 
 
