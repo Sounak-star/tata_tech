@@ -416,11 +416,26 @@ async function refresh() {
 
   if (s.step === 'baseline' && lastStep !== 'baseline') pane('baseline');
   if (s.step === 'baseline') {
-    $('baseFeedback').textContent = s.message || '';
-    if (s.error) { $('baseFeedback').textContent = s.error; $('btnBaseline').disabled = false; }
+    const got = s.baseline_progress || 0;
+    if (s.error) {
+      // Collection failed — say why, reset the countdown and let them retry.
+      if (baseTick) { clearInterval(baseTick); baseTick = null; }
+      $('baseFeedback').textContent = s.error;
+      $('basePrompt').textContent = 'Baseline not captured';
+      $('baseBar').style.width = '0';
+      $('btnBaseline').disabled = false;
+    } else if (baseTick) {
+      // Progress in windows, not just seconds — a countdown that reaches zero
+      // while nothing was captured tells the operator nothing useful.
+      $('baseFeedback').textContent = got
+        ? `${got} baseline window${got === 1 ? '' : 's'} captured`
+        : 'waiting for the camera to detect your face…';
+      $('baseFeedback').classList.toggle('good', got > 0);
+    }
   }
 
   if (s.step === 'review' && lastStep !== 'review') {
+    if (baseTick) { clearInterval(baseTick); baseTick = null; }
     pane('review');
     renderReview(s);
   }
@@ -432,21 +447,24 @@ $('btnSkip').onclick = async () => {
 };
 
 // ── baseline ───────────────────────────────────────────────────────────
+let baseTick = null;
+
 $('btnBaseline').onclick = async () => {
   showErr('');
   $('btnBaseline').disabled = true;
+  $('baseFeedback').textContent = '';
   try {
     const r = await post('/api/enroll/baseline');
     const total = (r.seconds || 25) * 1000;
     const t0 = Date.now();
-    const tick = setInterval(() => {
+    if (baseTick) clearInterval(baseTick);
+    baseTick = setInterval(() => {
       const pct = Math.min(100, 100 * (Date.now() - t0) / total);
       $('baseBar').style.width = pct + '%';
       const left = Math.max(0, Math.ceil((total - (Date.now() - t0)) / 1000));
       $('basePrompt').textContent = left
         ? `Sit still, look ahead — ${left}s`
-        : 'Processing baseline…';
-      if (pct >= 100) clearInterval(tick);
+        : 'Finishing up…';
     }, 200);
   } catch (e) {
     showErr(e.message);

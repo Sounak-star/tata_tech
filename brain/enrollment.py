@@ -294,6 +294,7 @@ class EnrollmentSession:
         self.yaw_signs: Dict[str, float] = {}
         self.baseline: Optional[dict] = None
         self.baseline_summary: Dict[str, float] = {}
+        self.baseline_progress = 0        # windows captured so far
         self.last_quality: Optional[Quality] = None
         self.rejected = 0
         self.error: Optional[str] = None
@@ -509,6 +510,7 @@ class EnrollmentSession:
             "pose_count": len(self.script),
             "progress": [asdict(p) for p in self.progress],
             "captured": len(self.vectors),
+            "baseline_progress": self.baseline_progress,
             "message": message,
             "quality": self.last_quality.as_dict() if self.last_quality else None,
             "error": self.error,

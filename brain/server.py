@@ -55,6 +55,8 @@ else:
 # ── face ID + enrolment state ───────────────────────────────────────────
 MACHINE_ID = os.environ.get("SAARTHI_MACHINE_ID", "local")
 BASELINE_SECONDS = 25.0
+BASELINE_MAX_SECONDS = 45.0   # keep waiting for windows, up to this
+MIN_BASELINE_WINDOWS = 5      # below this, mean/std per feature is noise
 
 _auth_inst: Optional[SupervisorAuth] = None
 _enroll: Optional[EnrollmentSession] = None
@@ -470,21 +472,63 @@ async def _collect_baseline(session: EnrollmentSession) -> None:
     Deliberately reuses the windows the fatigue pipeline already produces rather
     than opening the camera a second time — same frames, same features, and so
     the same numbers the live loop will compare against later.
+
+    We pick the source by which tracker is actually PRODUCING windows, never by
+    whether it holds a camera handle. When the operator enrols from the browser,
+    OpenCV can still own /dev/video0 from the failed startup calibration while
+    every real frame arrives over the WebSocket — polling the handle picks the
+    dead one and yields nothing for 25 s.
     """
-    src = tracker if (HAS_MEDIAPIPE and tracker is not None
-                      and getattr(tracker, "cap", None) is not None
-                      and tracker.cap and tracker.cap.isOpened()) else remote_tracker
+    sources = [t for t in (tracker, remote_tracker) if t is not None]
+    if not sources:
+        session.error = ("no camera pipeline is running — start the browser camera "
+                         "on the dashboard, or attach a cab camera.")
+        return
+
+    chosen = None
     rows: list = []
     seen: set = set()
-    deadline = time.time() + BASELINE_SECONDS
-    while time.time() < deadline:
-        feats = src.get_latest_features() if src else None
-        if feats:
+    started = time.time()
+
+    while True:
+        elapsed = time.time() - started
+        if elapsed >= BASELINE_MAX_SECONDS:
+            break
+        if elapsed >= BASELINE_SECONDS and len(rows) >= MIN_BASELINE_WINDOWS:
+            break
+
+        for src in sources:
+            feats = src.get_latest_features()
+            if not feats:
+                continue
+            # The first few windows compute PERCLOS over a barely-filled 60 s
+            # trailing buffer. Those numbers are not this operator's normal.
+            if float(feats.get("is_warming_up", 0.0)) > 0.5:
+                continue
+            if chosen is None:
+                chosen = src                    # lock onto the first live producer
+                print(f"[Enrol] baseline source: {type(src).__name__}", flush=True)
+            if src is not chosen:
+                continue
             key = tuple(round(float(v), 6) for v in feats.values())
             if key not in seen:                 # the tracker repeats the last window
                 seen.add(key)
                 rows.append(dict(feats))
+                session.baseline_progress = len(rows)
         await asyncio.sleep(0.25)
+
+    if len(rows) < MIN_BASELINE_WINDOWS:
+        session.error = (
+            f"only {len(rows)} of {MIN_BASELINE_WINDOWS} baseline windows captured in "
+            f"{int(time.time() - started)}s. Keep your face in view of the camera for "
+            f"the whole countdown — the preview must show the face mesh."
+            if chosen is not None else
+            "no feature windows arrived from the camera. Check that the camera preview "
+            "is live and your face is detected, then try again."
+        )
+        print(f"[Enrol] baseline failed: {session.error}", flush=True)
+        return
+
     session.set_baseline(rows)
 
 
