@@ -110,6 +110,9 @@ def _face_router(frame, landmarks, *, has_face: bool, ear: float = 0.0,
             session.feed_frame(frame, landmarks, yaw=yaw, pitch=pitch)
         return
 
+    if not brain.faceid.auto_enabled:
+        return
+
     result = brain.faceid.observe(frame, landmarks, has_face=has_face, ear=ear)
     if result is None:
         return
@@ -326,7 +329,17 @@ async def ws_endpoint(ws: WebSocket) -> None:
 # ── REST API ────────────────────────────────────────────────────────────
 @app.get("/api/profiles")
 def api_profiles() -> JSONResponse:
-    return JSONResponse(brain.store.profiles)
+    """Every profile, each tagged with whether it has a face template.
+
+    The full roster stays available: face ID failing must never stop a
+    supervisor selecting a rostered operator by hand.
+    """
+    templates = brain.faceid.templates
+    enrolled = set(templates.enrolled_ids()) if templates else set()
+    return JSONResponse({
+        oid: {**prof, "enrolled": oid in enrolled}
+        for oid, prof in brain.store.profiles.items()
+    })
 
 
 @app.post("/api/operator/{operator_id}")
@@ -381,6 +394,31 @@ def api_faceid_status() -> JSONResponse:
         "guest": brain.store.is_guest,
         "calibration_source": brain.calibration_source,
     })
+
+
+@app.post("/api/faceid/reidentify")
+def api_reidentify() -> JSONResponse:
+    """Forget who is in the seat and scan again — used when the operator changes.
+
+    Clicking a name in the directory latches a manual override so a bad match
+    cannot yank the profile away. That latch has to be releasable, or swapping
+    operators means restarting the machine.
+    """
+    result = brain.faceid.reidentify()
+    if brain.store.is_guest:
+        brain.store.switch_to_guest()          # stay conservative until resolved
+    return JSONResponse(result)
+
+
+@app.post("/api/faceid/auto")
+def api_faceid_auto(body: dict = Body(...)) -> JSONResponse:
+    enabled = bool(body.get("enabled", True))
+    status = brain.faceid.set_auto(enabled)
+    if enabled:
+        brain.faceid.reidentify()              # turning it back on rescans
+    print(f"[FaceID] automatic recognition {'enabled' if enabled else 'disabled'}",
+          flush=True)
+    return JSONResponse({"ok": True, **status})
 
 
 @app.get("/api/faceid/template/{operator_id}")

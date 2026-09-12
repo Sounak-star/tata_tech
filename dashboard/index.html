@@ -534,6 +534,21 @@
     <!-- Searchable Operator Directory card (STICKY search bar) -->
     <div class="card" style="flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; min-height: 180px;">
       <h2>Operator directory</h2>
+      <!-- Clicking a name latches a manual override so a bad match cannot yank
+           the profile away. Re-identify releases that latch when the operator
+           changes, without restarting the machine. -->
+      <div style="display:flex; gap:5px; margin-bottom:8px; flex-shrink:0;">
+        <button id="btnReidentify" title="Forget who is in the seat and scan again"
+                style="flex:1; padding:5px 6px; font-size:10.5px; font-weight:600;
+                       white-space:nowrap; cursor:pointer; background:#21262d;
+                       color:var(--txt); border:1px solid var(--line); border-radius:5px;"
+                >&#8635; Re-identify</button>
+        <button id="btnAutoFace" title="Automatic face recognition on/off"
+                style="padding:5px 9px; font-size:10.5px; font-weight:600;
+                       white-space:nowrap; cursor:pointer; background:#21262d;
+                       color:var(--muted); border:1px solid var(--line); border-radius:5px;"
+                >auto: &mdash;</button>
+      </div>
       <!-- Sticky search input -->
       <input type="text" id="opSearchInput" placeholder="Search 100+ operators..." 
              style="width: 100%; padding: 6px 10px; margin-bottom: 8px; background: #0d1117; color: #fff; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; outline: none; transition: border-color .15s; flex-shrink: 0;" />
@@ -796,6 +811,28 @@ async function loadOps(){
   const r = await fetch('/api/profiles');
   _allProfiles = await r.json();
   
+  const reidBtn = document.getElementById('btnReidentify');
+  if (reidBtn) reidBtn.onclick = async () => {
+    reidBtn.disabled = true;
+    reidBtn.textContent = 'scanning…';
+    try { await fetch('/api/faceid/reidentify', { method: 'POST' }); }
+    finally {
+      setTimeout(() => {
+        reidBtn.disabled = false;
+        reidBtn.innerHTML = '\u21BB Re-identify';
+      }, 1500);
+    }
+  };
+
+  const autoBtn = document.getElementById('btnAutoFace');
+  if (autoBtn) autoBtn.onclick = async () => {
+    const turningOn = !autoBtn.textContent.includes('on');
+    await fetch('/api/faceid/auto', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: turningOn })
+    });
+  };
+
   const searchInput = document.getElementById('opSearchInput');
   searchInput.addEventListener('input', (e) => {
     renderDirectory(e.target.value);
@@ -808,13 +845,28 @@ async function loadOps(){
     `fatigue:${h.fatigue_backend} · vision:${h.person_backend}`;
 }
 
+// Enrolled operators are the ones the machine can actually recognise, so they
+// are what the directory shows. The full roster stays one click away: face ID
+// failing must never stop a supervisor selecting a rostered operator by hand.
+let _showAllOperators = false;
+
+function toggleShowAll() {
+  _showAllOperators = !_showAllOperators;
+  renderDirectory(document.getElementById('opSearchInput').value);
+}
+
 function renderDirectory(query = '') {
   const box = document.getElementById('opDirectoryList');
   box.innerHTML = '';
   
   const cleanQuery = query.toLowerCase().trim();
   
-  const filtered = Object.values(_allProfiles).filter(o => {
+  const all = Object.values(_allProfiles);
+  const enrolledCount = all.filter(o => o.enrolled).length;
+  const pool = (_showAllOperators || enrolledCount === 0)
+    ? all : all.filter(o => o.enrolled);
+
+  const filtered = pool.filter(o => {
     const name = o.name.toLowerCase();
     const id = o.id.toLowerCase();
     const role = o.role.toLowerCase();
@@ -839,6 +891,16 @@ function renderDirectory(query = '') {
     if (idxB !== -1) return 1;
     return a.name.localeCompare(b.name);
   });
+
+  if (!filtered.length) {
+    const empty = document.createElement('div');
+    empty.style = 'padding:14px 10px; color:var(--muted); font-size:11px; line-height:1.6; text-align:center;';
+    empty.innerHTML = enrolledCount === 0
+      ? 'No operators enrolled on this machine yet.<br>Use <b>Enrol new operator</b> above to register one.'
+      : (cleanQuery ? 'No enrolled operator matches that search.'
+                    : 'No enrolled operators to show.');
+    box.appendChild(empty);
+  }
 
   filtered.forEach(o => {
     const item = document.createElement('div');
@@ -870,6 +932,18 @@ function renderDirectory(query = '') {
     item.onclick = () => fetch('/api/operator/' + o.id, { method:'POST' });
     box.appendChild(item);
   });
+
+  if (enrolledCount > 0) {
+    const foot = document.createElement('div');
+    foot.style = 'padding:8px 6px 4px; text-align:center; font-size:10.5px; color:var(--muted);';
+    const others = Object.keys(_allProfiles).length - enrolledCount;
+    foot.innerHTML = _showAllOperators
+      ? `Showing all operators &middot; <a href="#" id="toggleAllOps" style="color:#58a6ff;">show enrolled only (${enrolledCount})</a>`
+      : `${enrolledCount} enrolled &middot; <a href="#" id="toggleAllOps" style="color:#58a6ff;">show all ${others} others</a>`;
+    box.appendChild(foot);
+    const link = document.getElementById('toggleAllOps');
+    if (link) link.onclick = (e) => { e.preventDefault(); toggleShowAll(); };
+  }
 }
 
 // ── Personalized Safety Recommendations ─────────────────────────────────
@@ -1000,6 +1074,15 @@ function render(f){
   }
 
   // ── face ID pill ────────────────────────────────────────────────────
+  if (f.faceid) {
+    const autoBtn = document.getElementById('btnAutoFace');
+    if (autoBtn) {
+      const on = f.faceid.auto !== false;
+      autoBtn.textContent = 'auto: ' + (on ? 'on' : 'off');
+      autoBtn.style.color = on ? '#2ea043' : 'var(--muted)';
+      autoBtn.style.borderColor = on ? '#1f4a28' : 'var(--line)';
+    }
+  }
   if (f.faceid) {
     const fid = f.faceid, pill = document.getElementById('faceidPill');
     let label, colour;

@@ -149,6 +149,8 @@ class FaceID:
         self.identifier = None
         self.templates = None
         self.last_error: Optional[str] = None
+        # When off, the camera never changes the operator — pure kiosk mode.
+        self.auto_enabled = True
 
         try:
             from .faceid import FaceEmbedder
@@ -178,15 +180,40 @@ class FaceID:
         return self.identifier.observe(frame, landmarks, has_face=has_face, ear=ear)
 
     def set_manual(self, operator_id: Optional[str]) -> None:
-        """Dashboard override — always available, and it always wins."""
+        """Dashboard override — always available, and it always wins.
+
+        This LATCHES: the face cannot override a supervisor's choice. Release it
+        with reidentify() when the seat changes, otherwise the cab stays pinned
+        to whoever was picked last.
+        """
         if self.identifier is not None:
             self.identifier.force(operator_id)
 
+    def reidentify(self) -> dict:
+        """Drop the manual latch and any locked identity, and scan again.
+
+        Used when the operator changes: without it, the only way out of a manual
+        selection was a server restart.
+        """
+        if self.identifier is None:
+            return {"ok": False, "error": self.last_error or "face ID unavailable"}
+        self.identifier.reset()
+        return {"ok": True, **self.identifier.status()}
+
+    def set_auto(self, enabled: bool) -> dict:
+        """Turn automatic recognition on or off without restarting."""
+        self.auto_enabled = bool(enabled)
+        if self.identifier is not None and not self.auto_enabled:
+            # Freeze on whoever is active rather than drifting to guest.
+            self.identifier.manual = self.identifier.operator_id is not None
+        return self.status()
+
     def status(self) -> dict:
         if self.identifier is None:
-            return {"state": "unavailable", "backend": self.backend,
-                    "available": False, "reason": self.last_error or "not initialised"}
-        return self.identifier.status()
+            return {"state": "unavailable", "backend": self.backend, "available": False,
+                    "auto": self.auto_enabled,
+                    "reason": self.last_error or "not initialised"}
+        return {**self.identifier.status(), "auto": self.auto_enabled}
 
     def recognise(self, frame=None) -> dict:
         """Return the active operator's profile (unchanged legacy signature)."""
