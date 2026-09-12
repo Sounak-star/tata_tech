@@ -1920,164 +1920,6 @@
     },
     "notes": "Standard operating profile."
   },
-  "op_111": {
-    "id": "op_111",
-    "name": "Onkar",
-    "role": "Excavator Operator",
-    "experience": "expert",
-    "hearing": "normal",
-    "color_vision": "tritanopia",
-    "language": "en",
-    "notes": "Colour-blind (tritanopia) — blue/white + icons, never red-vs-green alone.",
-    "calibration": {
-      "ear_baseline": 0.3044,
-      "perclos_baseline": 0.0135,
-      "blink_rate_baseline": 0.0,
-      "calibrated": true,
-      "baseline": {
-        "ear_mean": {
-          "mean": 0.3044434928962356,
-          "std": 0.019461623275778415
-        },
-        "ear_min": {
-          "mean": 0.2837543717119325,
-          "std": 0.06731678896278868
-        },
-        "ear_std": {
-          "mean": 0.014838345085366657,
-          "std": 0.032667486830479944
-        },
-        "perclos": {
-          "mean": 0.013501765857863553,
-          "std": 0.002758554376291716
-        },
-        "blink_rate": {
-          "mean": 0.0,
-          "std": 1.0
-        },
-        "mar_mean": {
-          "mean": 0.005524721756923118,
-          "std": 0.012175731015070948
-        },
-        "mar_max": {
-          "mean": 0.0077873206099100725,
-          "std": 0.020313396032275558
-        },
-        "is_yawn": {
-          "mean": 0.0,
-          "std": 1.0
-        },
-        "pitch_mean": {
-          "mean": 7.743080517851974,
-          "std": 1.0180370464578805
-        },
-        "yaw_mean": {
-          "mean": -4.246113669716035,
-          "std": 1.5780702816090384
-        },
-        "roll_mean": {
-          "mean": 0.5197220732414619,
-          "std": 0.5514918673217611
-        },
-        "pitch_std": {
-          "mean": 0.35204927055016616,
-          "std": 0.34188607340397387
-        }
-      }
-    },
-    "enrolled": {
-      "by": "sup_001",
-      "machine": "local",
-      "at": "2026-09-12T18:41:50+00:00",
-      "poses": [
-        "center",
-        "turn_b",
-        "no_glasses",
-        "chin_down",
-        "turn_a"
-      ],
-      "vectors": 15
-    }
-  },
-  "op_112": {
-    "id": "op_112",
-    "name": "Sounak",
-    "role": "Excavator Operator",
-    "experience": "trainee",
-    "hearing": "normal",
-    "color_vision": "normal",
-    "language": "en",
-    "notes": "Trainee — earlier warnings, simpler UI.",
-    "calibration": {
-      "ear_baseline": 0.2836,
-      "perclos_baseline": 0.0638,
-      "blink_rate_baseline": 1.1538,
-      "calibrated": true,
-      "baseline": {
-        "ear_mean": {
-          "mean": 0.28360654436488986,
-          "std": 0.0352487008953814
-        },
-        "ear_min": {
-          "mean": 0.2513329834339123,
-          "std": 0.0683448238460036
-        },
-        "ear_std": {
-          "mean": 0.02400318266660681,
-          "std": 0.0286008683807119
-        },
-        "perclos": {
-          "mean": 0.06378093728261514,
-          "std": 0.003625038167787984
-        },
-        "blink_rate": {
-          "mean": 1.1538461538461537,
-          "std": 0.3628297177322302
-        },
-        "mar_mean": {
-          "mean": 0.021407764638776184,
-          "std": 0.05229327754883204
-        },
-        "mar_max": {
-          "mean": 0.02572966222663592,
-          "std": 0.05891426699730519
-        },
-        "is_yawn": {
-          "mean": 0.0,
-          "std": 1.0
-        },
-        "pitch_mean": {
-          "mean": 7.663006109885311,
-          "std": 5.0395743204927586
-        },
-        "yaw_mean": {
-          "mean": 4.085986565695687,
-          "std": 9.495749790620886
-        },
-        "roll_mean": {
-          "mean": 12.931284853984062,
-          "std": 50.43626344859175
-        },
-        "pitch_std": {
-          "mean": 0.834547615759855,
-          "std": 1.2150018616870466
-        }
-      }
-    },
-    "enrolled": {
-      "by": "sup_001",
-      "machine": "local",
-      "at": "2026-09-12T18:45:03+00:00",
-      "poses": [
-        "center",
-        "no_glasses",
-        "turn_b",
-        "turn_a",
-        "chin_down"
-      ],
-      "vectors": 15
-    }
-  },
   "op_113": {
     "id": "op_113",
     "name": "Aarav Deshmukh",
@@ -2162,5 +2004,209 @@
       "calibrated": true
     },
     "notes": "Hard of hearing — haptic + flash alerts. Trainee — conservative thresholds, simpler UI."
+  },
+  "op_111": {
+    "id": "op_111",
+    "name": "BW",
+    "role": "Excavator Operator",
+    "experience": "expert",
+    "hearing": "normal",
+    "color_vision": "protanopia",
+    "language": "en",
+    "notes": "Colour-blind (protanopia) — blue/white + icons, never red-vs-green alone.",
+    "calibration": {
+      "ear_baseline": 0.3027,
+      "perclos_baseline": 0.0302,
+      "blink_rate_baseline": 0.8152,
+      "calibrated": true,
+      "baseline": {
+        "ear_mean": {
+          "mean": 0.3027214360240639,
+          "std": 0.03389248046260398
+        },
+        "ear_min": {
+          "mean": 0.28732594701262226,
+          "std": 0.06462717644518627
+        },
+        "ear_std": {
+          "mean": 0.012801783775845491,
+          "std": 0.026138126510556515
+        },
+        "perclos": {
+          "mean": 0.030181159420289858,
+          "std": 0.005501994415228444
+        },
+        "blink_rate": {
+          "mean": 0.8152173913043478,
+          "std": 0.6466106275975957
+        },
+        "mar_mean": {
+          "mean": 0.0036818125207305607,
+          "std": 0.001695811436354331
+        },
+        "mar_max": {
+          "mean": 0.004715691007544374,
+          "std": 0.0032115526277464016
+        },
+        "is_yawn": {
+          "mean": 0.0,
+          "std": 1.0
+        },
+        "pitch_mean": {
+          "mean": 8.390303384866213,
+          "std": 0.86384625248305
+        },
+        "yaw_mean": {
+          "mean": -5.139955499423026,
+          "std": 2.302003366238082
+        },
+        "roll_mean": {
+          "mean": 0.4222402232868691,
+          "std": 0.4945923398701603
+        },
+        "pitch_std": {
+          "mean": 0.31898201796813697,
+          "std": 0.2109282104534365
+        }
+      },
+      "posture": {
+        "head_height": [
+          0.7441873384846581,
+          0.02
+        ],
+        "shoulder_y": [
+          0.7514417444666227,
+          0.006030666074340301
+        ],
+        "head_forward": [
+          0.03642470025483312,
+          0.02
+        ],
+        "shoulder_width": [
+          0.46502112514442867,
+          0.008161047615050656
+        ],
+        "sway": [
+          0.002746881750391352,
+          0.004
+        ],
+        "samples": 144
+      }
+    },
+    "enrolled": {
+      "by": "sup_001",
+      "machine": "local",
+      "at": "2026-09-12T21:41:10+00:00",
+      "poses": [
+        "center",
+        "turn_a",
+        "no_glasses",
+        "chin_down",
+        "turn_b"
+      ],
+      "vectors": 12
+    }
+  },
+  "op_112": {
+    "id": "op_112",
+    "name": "sou",
+    "role": "Excavator Operator",
+    "experience": "intermediate",
+    "hearing": "impaired",
+    "color_vision": "normal",
+    "language": "en",
+    "notes": "Hard of hearing — alerts must not rely on sound (buzz + flash).",
+    "calibration": {
+      "ear_baseline": 0.2867,
+      "perclos_baseline": 0.1524,
+      "blink_rate_baseline": 3.4026,
+      "calibrated": true,
+      "baseline": {
+        "ear_mean": {
+          "mean": 0.28672973407072144,
+          "std": 0.0662288333078764
+        },
+        "ear_min": {
+          "mean": 0.25424337133778524,
+          "std": 0.07493545027002449
+        },
+        "ear_std": {
+          "mean": 0.02480247621050775,
+          "std": 0.03195158652223298
+        },
+        "perclos": {
+          "mean": 0.15242512045157924,
+          "std": 0.028557977405791572
+        },
+        "blink_rate": {
+          "mean": 3.4026465028355393,
+          "std": 0.7166330821584493
+        },
+        "mar_mean": {
+          "mean": 0.015231626266888502,
+          "std": 0.008961251788062312
+        },
+        "mar_max": {
+          "mean": 0.020560795997017024,
+          "std": 0.013658536097298106
+        },
+        "is_yawn": {
+          "mean": 0.0,
+          "std": 1.0
+        },
+        "pitch_mean": {
+          "mean": 12.585188563450265,
+          "std": 7.361763173434142
+        },
+        "yaw_mean": {
+          "mean": 8.29520582986538,
+          "std": 18.966167075131217
+        },
+        "roll_mean": {
+          "mean": -6.392983767012338,
+          "std": 29.051247566262056
+        },
+        "pitch_std": {
+          "mean": 2.6045308465700914,
+          "std": 7.091097132207557
+        }
+      },
+      "posture": {
+        "head_height": [
+          0.7254941860834757,
+          0.04406579116389165
+        ],
+        "shoulder_y": [
+          0.6889450705299774,
+          0.0076401127379323785
+        ],
+        "head_forward": [
+          0.09224098998432358,
+          0.03378104963405783
+        ],
+        "shoulder_width": [
+          0.47407637039820355,
+          0.005472210109473837
+        ],
+        "sway": [
+          0.0016334689520876703,
+          0.004
+        ],
+        "samples": 192
+      }
+    },
+    "enrolled": {
+      "by": "sup_001",
+      "machine": "local",
+      "at": "2026-09-12T21:50:25+00:00",
+      "poses": [
+        "center",
+        "no_glasses",
+        "turn_a",
+        "turn_b",
+        "chin_down"
+      ],
+      "vectors": 14
+    }
   }
 }
