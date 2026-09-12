@@ -205,6 +205,41 @@ def test_augmentation_on_new_machine():
     print(f"ok  augmentation: EX-07 folded in ({summary['vectors']} vectors, 5 anchors)")
 
 
+# ── 8. regressions: a disabled or blind camera must not steal the profile ─
+def test_manual_pick_survives_the_face_disappearing():
+    """Observed on the live dashboard: pick Priya, look away, and the cab
+    silently dropped to the guest profile. A manual selection is the
+    supervisor's decision — an empty seat is not a reason to discard it."""
+    ident, emb, people = build()
+    ident.force("priya")
+
+    last, events = run(ident, emb, 60, has_face=False)
+    assert ident.operator_id == "priya",         f"manual pick wiped by an empty seat (now {ident.operator_id})"
+    assert last.state is State.LOCKED
+    assert not events, "an absent face must not fire a profile change"
+    print("ok  regression: manual pick survives the camera losing the face")
+
+
+def test_unavailable_faceid_never_moves_the_operator():
+    """With no ArcFace model (or an empty gallery) face ID is off. It must be
+    inert — not quietly reset whoever the dashboard selected."""
+    td = tempfile.mkdtemp()
+    store = TemplateStore(path=Path(td) / "t.enc", keyfile=Path(td) / "k.key")
+    emb = StubEmbedder()
+    emb.available = False                      # as if onnxruntime/model missing
+    emb.last_error = "ArcFace model not found"
+    ident = Identifier(emb, store, machine_id="EX-07")
+
+    assert not ident.available
+    ident.force("ravi")
+
+    _, events = run(ident, emb, 40, has_face=False)
+    _, more = run(ident, emb, 40, has_face=True)
+    assert ident.operator_id == "ravi", f"identity moved to {ident.operator_id}"
+    assert not events and not more, "disabled face ID emitted profile changes"
+    print("ok  regression: face ID with no model is inert, never switches profile")
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":

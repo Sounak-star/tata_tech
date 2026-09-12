@@ -301,6 +301,9 @@
 <header>
   <h1>🛠 SAARTHI · SmartCabin AI Copilot</h1>
   <div class="status">
+    <span id="faceidPill" title="Face recognition status"
+          style="padding:3px 9px;border-radius:11px;border:1px solid var(--line);
+                 background:#0d1117;font-size:11px;">face ID: —</span> &nbsp;|&nbsp;
     <span id="conn">● connecting…</span> &nbsp;|&nbsp;
     <span class="phase" id="phase"></span> &nbsp;|&nbsp;
     <span id="backend"></span>
@@ -535,6 +538,25 @@
       <input type="text" id="opSearchInput" placeholder="Search 100+ operators..." 
              style="width: 100%; padding: 6px 10px; margin-bottom: 8px; background: #0d1117; color: #fff; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; outline: none; transition: border-color .15s; flex-shrink: 0;" />
       
+
+      <!-- Enrolment entry point. Registers a new operator on THIS cab camera:
+           profile card, face signature and personal fatigue baseline in one
+           sitting. Supervisor PIN required. -->
+      <a href="/enroll" style="text-decoration:none; flex-shrink:0;">
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px;
+                    margin-bottom:8px; border:1px dashed var(--line); border-radius:6px;
+                    background:#0d1117; color:var(--txt); font-size:12px; cursor:pointer;"
+             onmouseover="this.style.borderColor='var(--blue)';this.style.color='#58a6ff'"
+             onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--txt)'">
+          <span style="font-size:15px; line-height:1;">&#65291;</span>
+          <div>
+            <div style="font-weight:600;">Enrol new operator</div>
+            <div style="color:var(--muted); font-size:10.5px;">
+              Profile + face + baseline &middot; supervisor PIN
+            </div>
+          </div>
+        </div>
+      </a>
       <!-- Scrollable operator list -->
       <div id="opDirectoryList" style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line); border-radius: 6px; padding: 4px; background: #0d1117;">
         <div id="opButtons"></div> <!-- compatibility div -->
@@ -975,6 +997,24 @@ function render(f){
     if (camVideo && camVideo.style.display !== 'none') {
       camVideo.style.display = 'none';
     }
+  }
+
+  // ── face ID pill ────────────────────────────────────────────────────
+  if (f.faceid) {
+    const fid = f.faceid, pill = document.getElementById('faceidPill');
+    let label, colour;
+    if (f.enrolling)                   { label = 'enrolling…';       colour = '#d29922'; }
+    else if (!fid.available)           { label = 'face ID: off';     colour = '#8b949e'; }
+    else if (fid.guest)                { label = 'unidentified';     colour = '#f85149'; }
+    else if (fid.state === 'scanning') { label = 'identifying…';     colour = '#d29922'; }
+    else if (fid.manual)               { label = 'operator: manual'; colour = '#8b949e'; }
+    else if (fid.state === 'locked')   { label = 'face ID: locked';  colour = '#2ea043'; }
+    else                               { label = 'face ID: ready';   colour = '#8b949e'; }
+    pill.textContent = label;
+    pill.style.color = colour;
+    pill.style.borderColor = (colour === '#8b949e') ? 'var(--line)' : colour;
+    pill.title = [fid.reason, fid.error, 'baseline: ' + (fid.calibration_source || '—')]
+                   .filter(Boolean).join(' · ');
   }
 
   // ── operator ────────────────────────────────────────────────────────

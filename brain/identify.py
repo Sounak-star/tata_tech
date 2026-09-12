@@ -170,18 +170,24 @@ class Identifier:
         """Feed one frame. Cheap on most ticks; only embeds 1 frame in N."""
         self._frame += 1
 
+        # Nothing to recognise with: no model, or an empty gallery. Report the
+        # state and change nothing — a disabled feature must never move the
+        # active operator, least of all off one a supervisor picked by hand.
+        if not self.available:
+            return IdentifyResult(self.state, self.operator_id,
+                                  reason=self.embedder.last_error or "no templates enrolled")
+
+        # A manual pick is the supervisor's decision and outranks the camera,
+        # including the camera seeing nobody. Only another manual selection, or
+        # a positive identification of a different face, replaces it.
+        if self.manual:
+            return IdentifyResult(State.LOCKED, self.operator_id, reason="manual")
+
         if not has_face or landmarks is None or bgr is None:
             return self._on_absent()
 
         self._absent = 0
         self._present += 1
-
-        if self.manual:                                   # dashboard override wins
-            return IdentifyResult(State.LOCKED, self.operator_id, reason="manual")
-
-        if not self.available:
-            return IdentifyResult(self.state, self.operator_id,
-                                  reason=self.embedder.last_error or "no templates enrolled")
 
         if self.state is State.LOCKED:
             return self._maybe_reverify(bgr, landmarks)
