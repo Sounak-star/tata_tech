@@ -30,6 +30,7 @@ from .demo_source import DemoSource, HybridLiveSource
 from .enrollment import EnrollmentSession, OperatorDetails, SupervisorAuth
 from .pipeline import Brain
 from .live_camera import BackgroundCameraTracker, RemoteCameraTracker, HAS_MEDIAPIPE
+from .occlusion import OcclusionTracker
 from .pose import PoseTracker
 from .blindspot import BackgroundBlindspotTracker
 
@@ -56,6 +57,11 @@ else:
 # Posture fallback. Shares the frames the face pipeline already decodes and
 # runs at a low duty cycle — posture changes over seconds, not frames.
 pose_tracker = PoseTracker(every_n=2) if HAS_MEDIAPIPE else None
+
+# Is the face merely FITTED, or actually visible? MediaPipe keeps reporting a
+# mesh through sunglasses, so "has_face" cannot answer this and the fatigue
+# model would be fed geometry nobody can see.
+occlusion = OcclusionTracker()
 
 # ── face ID + enrolment state ───────────────────────────────────────────
 MACHINE_ID = os.environ.get("SAARTHI_MACHINE_ID", "local")
@@ -169,6 +175,13 @@ def _face_router(frame, landmarks, *, has_face: bool, ear: float = 0.0,
             and pose_tracker is not None and pose_tracker.available):
         session.add_posture_sample(pose_tracker.latest)
 
+    # Only meaningful when a face is being reported — that is exactly the case
+    # this check exists for.
+    if has_face and frame is not None and landmarks is not None:
+        occlusion.update(frame, landmarks, ear=ear)
+    elif not has_face:
+        occlusion.reset()
+
     if session is not None and session.step.value == "poses":
         if has_face and frame is not None:
             session.feed_frame(frame, landmarks, yaw=yaw, pitch=pitch)
@@ -261,6 +274,11 @@ async def _loop() -> None:
         if pose_tracker is not None and pose_tracker.available:
             signal["pose"] = pose_tracker.latest
 
+        # Eyes covered means EAR/PERCLOS/blink are fiction, even though the
+        # landmarker is still producing them. Treat that as no face signal.
+        signal["eyes_covered"] = occlusion.eyes_covered
+        signal["occlusion_reason"] = occlusion.reason()
+
         frame = brain.tick(signal)
         frame["phase"] = signal.get("phase")
         # Keep the camera preview overlay in sync with the latest fatigue decision.
@@ -296,6 +314,7 @@ async def _loop() -> None:
         frame.setdefault("posture", {})["face_age"] = _finite(
             _act.features_age() if _act is not None else None)
         frame["posture"]["camera"] = _active_source_name() or "none"
+        frame["posture"]["occlusion"] = occlusion.status()
 
         with _enroll_lock:
             frame["enrolling"] = _enroll is not None and _enroll.step.value in ("poses", "baseline")
@@ -558,6 +577,8 @@ def api_posture_status() -> JSONResponse:
         "mode": brain.posture_mode,
         "reason": brain.posture_reason,
         "baseline_ready": brain.posture.ready,
+        "occlusion": occlusion.status(),
+        "occlusion_reason": occlusion.reason(),
         # features_age() is inf when no face window has ever landed, and inf is
         # not JSON. None means "never seen", which is what the UI wants anyway.
         "camera": _active_source_name() or "none",

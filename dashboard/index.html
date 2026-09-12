@@ -504,6 +504,7 @@
   <div id="postureChips" style="display:flex; gap:5px; flex-wrap:wrap;
        margin:0 0 10px; font-size:10.5px;">
     <span class="pchip" id="chipFace">face: —</span>
+    <span class="pchip" id="chipEyes">eyes: —</span>
     <span class="pchip" id="chipBody">body: —</span>
     <span class="pchip" id="chipBase">baseline: —</span>
     <span class="pchip" id="chipMode">mode: —</span>
@@ -1249,6 +1250,19 @@ function render(f){
       set('chipFace', `face: live (${age.toFixed(1)}s)`, 'ok');
     } else {
       set('chipFace', `face: LOST ${age.toFixed(0)}s`, 'warn');
+    }
+
+    // A tracked face is not necessarily a VISIBLE one. Sunglasses leave the mesh
+    // fitted, so this chip is the one that explains a switch the face chip cannot.
+    const occ = f.posture.occlusion || {};
+    if (!occ.valid) {
+      set('chipEyes', 'eyes: —', '');
+    } else if (occ.eyes_covered_stable) {
+      set('chipEyes', `eyes: COVERED (${(occ.eye_ratio ?? 0).toFixed(2)})`, 'bad');
+    } else if (occ.mouth_covered) {
+      set('chipEyes', `eyes: visible · mouth covered`, 'warn');
+    } else {
+      set('chipEyes', `eyes: visible (${(occ.eye_ratio ?? 0).toFixed(2)})`, 'ok');
     }
 
     if (!trk.available) {

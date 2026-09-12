@@ -255,6 +255,62 @@ def test_reason_card_never_presents_posture_as_shap():
     print(f"ok  honesty: \"{card['title']}\" — {card['detail'][:52]}...")
 
 
+# ── 6. sunglasses vs a dust mask ─────────────────────────────────────────
+def test_covered_eyes_switch_even_though_the_face_is_still_tracked():
+    """The case a naive "no face" trigger misses entirely. MediaPipe keeps
+    fitting a mesh through sunglasses, so features keep arriving and has_face
+    stays True — but EAR and PERCLOS now describe eyelids nobody can see."""
+    brain = make_brain()
+    for _ in range(5):
+        brain.tick(signal(features=alert_features(), pose=ALERT_POSE))
+    assert not brain.posture_mode
+
+    out = None
+    for _ in range(POSTURE_ENTER_TICKS + 2):
+        sig = signal(features=alert_features(), pose=ALERT_POSE)
+        sig["eyes_covered"] = True                     # landmarker still happy
+        sig["occlusion_reason"] = "eyes appear covered (sunglasses or visor)"
+        out = brain.tick(sig)
+
+    assert brain.posture_mode,         "sunglasses kept the system in face mode on fictional eye data"
+    assert out["fatigue"]["source"] == "posture"
+    assert out["posture"]["eyes_covered"] is True
+    assert "covered" in out["posture"]["reason"], out["posture"]["reason"]
+    print(f"ok  sunglasses: face still tracked, but switched — "
+          f"\"{out['posture']['reason']}\"")
+
+
+def test_a_mask_over_the_mouth_stays_in_face_mode():
+    """The screenshot case. The mouth is gone but the eyes are visible, so
+    PERCLOS is intact — and PERCLOS beats posture. Switching would be a
+    DOWNGRADE, so staying put is the correct behaviour, not a bug."""
+    brain = make_brain()
+    out = None
+    for _ in range(POSTURE_ENTER_TICKS * 2):
+        sig = signal(features=alert_features(), pose=ALERT_POSE)
+        sig["eyes_covered"] = False                    # mask, eyes clear
+        out = brain.tick(sig)
+
+    assert not brain.posture_mode,         "a dust mask downgraded us off PERCLOS onto weaker posture evidence"
+    assert out["fatigue"]["source"] != "posture"
+    print("ok  dust mask: eyes visible, so PERCLOS keeps control (correct)")
+
+
+def test_uncovering_the_eyes_hands_control_back():
+    brain = make_brain()
+    for _ in range(POSTURE_ENTER_TICKS + 2):
+        sig = signal(features=alert_features(), pose=ALERT_POSE)
+        sig["eyes_covered"] = True
+        brain.tick(sig)
+    assert brain.posture_mode
+
+    for _ in range(POSTURE_EXIT_TICKS + 2):
+        out = brain.tick(signal(features=alert_features(), pose=ALERT_POSE))
+    assert not brain.posture_mode, "glasses came off but posture mode stuck"
+    assert out["fatigue"]["source"] != "posture"
+    print("ok  glasses off: PERCLOS takes back over")
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":

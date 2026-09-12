@@ -60,6 +60,7 @@ class Brain:
         self.posture = PostureFatigue(None)
         self.posture_mode = False
         self.posture_reason = ""
+        self.occlusion_reason = ""
         self._no_face_ticks = 0
         self._face_ticks = 0
         self.persons = PersonDetector()
@@ -147,8 +148,9 @@ class Brain:
             if self._no_face_ticks >= POSTURE_ENTER_TICKS and pose_present:
                 self.posture_mode = True
                 self.posture.reset()
-                self.posture_reason = ("face not visible — operator still detected, "
-                                       "monitoring posture")
+                self.posture_reason = (self.occlusion_reason
+                                       or "face not visible — operator still "
+                                          "detected, monitoring posture")
                 print(f"[Brain] posture mode ON ({self.posture_reason})", flush=True)
         else:
             if self._face_ticks >= POSTURE_EXIT_TICKS:
@@ -173,15 +175,22 @@ class Brain:
         pose: Optional[PoseMetrics] = signal.get("pose")
         pose_present = bool(pose is not None and pose.present)
 
-        self._update_mode(face_ok=raw_feats is not None, pose_present=pose_present)
+        # A face can be present, tracked, and still useless: sunglasses leave the
+        # mesh fitted while EAR and PERCLOS describe eyelids nobody can see. That
+        # is not a face signal, however confident the numbers look.
+        eyes_covered = bool(signal.get("eyes_covered"))
+        self.occlusion_reason = signal.get("occlusion_reason", "") if eyes_covered else ""
+        face_ok = raw_feats is not None and not eyes_covered
+
+        self._update_mode(face_ok=face_ok, pose_present=pose_present)
 
         if self.posture_mode:
             feat_src = "posture"
             features = synth_window(0.0)          # keeps the log shape consistent
             fatigue = self.posture.update(pose)
         else:
-            feat_src = "camera" if raw_feats is not None else "demo-synth"
-            features = raw_feats if raw_feats is not None else synth_window(signal.get("drowsiness", 0.0))
+            feat_src = "camera" if face_ok else "demo-synth"
+            features = raw_feats if face_ok else synth_window(signal.get("drowsiness", 0.0))
             fatigue = self.fatigue.update(features)
 
         # ── Warm-up Guard ────────────────────────────────────────────────────
@@ -275,6 +284,7 @@ class Brain:
             "posture": {
                 "mode": self.posture_mode,
                 "reason": self.posture_reason,
+                "eyes_covered": eyes_covered,
                 "present": bool(pose is not None and pose.present),
                 "ready": self.posture.ready,
                 "sigmas": fatigue.get("sigmas", {}),
