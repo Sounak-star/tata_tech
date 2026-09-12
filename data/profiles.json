@@ -14,7 +14,7 @@
       "blink_rate_baseline": 14.0,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 alerts must not rely on sound (buzz + flash)."
+    "notes": "Hard of hearing — alerts must not rely on sound (buzz + flash)."
   },
   "priya": {
     "id": "priya",
@@ -31,7 +31,7 @@
       "blink_rate_baseline": 16.0,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 earlier warnings, simpler UI, fewer gauges."
+    "notes": "Trainee — earlier warnings, simpler UI, fewer gauges."
   },
   "arjun": {
     "id": "arjun",
@@ -48,7 +48,7 @@
       "blink_rate_baseline": 13.0,
       "calibrated": true
     },
-    "notes": "Colour-blind (deuteranopia) \u2014 use blue/white + icons, never red-vs-green alone."
+    "notes": "Colour-blind (deuteranopia) — use blue/white + icons, never red-vs-green alone."
   },
   "op_001": {
     "id": "op_001",
@@ -65,7 +65,7 @@
       "blink_rate_baseline": 11.6,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_002": {
     "id": "op_002",
@@ -82,7 +82,7 @@
       "blink_rate_baseline": 15.9,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_003": {
     "id": "op_003",
@@ -99,7 +99,7 @@
       "blink_rate_baseline": 12.5,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_004": {
     "id": "op_004",
@@ -116,7 +116,7 @@
       "blink_rate_baseline": 16.1,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+    "notes": "Hard of hearing — haptic + flash alerts."
   },
   "op_005": {
     "id": "op_005",
@@ -150,7 +150,7 @@
       "blink_rate_baseline": 16.8,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_007": {
     "id": "op_007",
@@ -201,7 +201,7 @@
       "blink_rate_baseline": 15.6,
       "calibrated": true
     },
-    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (tritanopia) — high contrast + icons."
   },
   "op_010": {
     "id": "op_010",
@@ -218,7 +218,7 @@
       "blink_rate_baseline": 17.3,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_011": {
     "id": "op_011",
@@ -269,7 +269,7 @@
       "blink_rate_baseline": 16.0,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_014": {
     "id": "op_014",
@@ -303,7 +303,7 @@
       "blink_rate_baseline": 12.7,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Hard of hearing — haptic + flash alerts. Trainee — conservative thresholds, simpler UI."
   },
   "op_016": {
     "id": "op_016",
@@ -320,7 +320,7 @@
       "blink_rate_baseline": 17.6,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_017": {
     "id": "op_017",
@@ -354,7 +354,7 @@
       "blink_rate_baseline": 12.5,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_019": {
     "id": "op_019",
@@ -371,7 +371,7 @@
       "blink_rate_baseline": 14.8,
       "calibrated": true
     },
-    "notes": "Colour-blind (deuteranopia) \u2014 high contrast + icons. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Colour-blind (deuteranopia) — high contrast + icons. Trainee — conservative thresholds, simpler UI."
   },
   "op_020": {
     "id": "op_020",
@@ -388,7 +388,7 @@
       "blink_rate_baseline": 17.0,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (protanopia) — high contrast + icons."
   },
   "op_021": {
     "id": "op_021",
@@ -422,7 +422,7 @@
       "blink_rate_baseline": 14.8,
       "calibrated": true
     },
-    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Colour-blind (tritanopia) — high contrast + icons. Trainee — conservative thresholds, simpler UI."
   },
   "op_023": {
     "id": "op_023",
@@ -473,7 +473,7 @@
       "blink_rate_baseline": 14.5,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (protanopia) — high contrast + icons."
   },
   "op_026": {
     "id": "op_026",
@@ -490,7 +490,7 @@
       "blink_rate_baseline": 12.6,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+    "notes": "Hard of hearing — haptic + flash alerts."
   },
   "op_027": {
     "id": "op_027",
@@ -524,7 +524,7 @@
       "blink_rate_baseline": 11.5,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_029": {
     "id": "op_029",
@@ -609,7 +609,7 @@
       "blink_rate_baseline": 16.8,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts. Colour-blind (tritanopia) \u2014 high contrast + icons."
+    "notes": "Hard of hearing — haptic + flash alerts. Colour-blind (tritanopia) — high contrast + icons."
   },
   "op_034": {
     "id": "op_034",
@@ -626,7 +626,7 @@
       "blink_rate_baseline": 11.3,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Hard of hearing — haptic + flash alerts. Trainee — conservative thresholds, simpler UI."
   },
   "op_035": {
     "id": "op_035",
@@ -660,7 +660,7 @@
       "blink_rate_baseline": 15.7,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_037": {
     "id": "op_037",
@@ -677,7 +677,7 @@
       "blink_rate_baseline": 16.7,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+    "notes": "Hard of hearing — haptic + flash alerts."
   },
   "op_038": {
     "id": "op_038",
@@ -694,7 +694,7 @@
       "blink_rate_baseline": 17.8,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Hard of hearing — haptic + flash alerts. Trainee — conservative thresholds, simpler UI."
   },
   "op_039": {
     "id": "op_039",
@@ -711,7 +711,7 @@
       "blink_rate_baseline": 12.9,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Hard of hearing — haptic + flash alerts. Trainee — conservative thresholds, simpler UI."
   },
   "op_040": {
     "id": "op_040",
@@ -813,7 +813,7 @@
       "blink_rate_baseline": 12.7,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_046": {
     "id": "op_046",
@@ -847,7 +847,7 @@
       "blink_rate_baseline": 12.7,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_048": {
     "id": "op_048",
@@ -881,7 +881,7 @@
       "blink_rate_baseline": 15.5,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_050": {
     "id": "op_050",
@@ -966,7 +966,7 @@
       "blink_rate_baseline": 16.1,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (protanopia) — high contrast + icons."
   },
   "op_055": {
     "id": "op_055",
@@ -1017,7 +1017,7 @@
       "blink_rate_baseline": 15.6,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+    "notes": "Hard of hearing — haptic + flash alerts."
   },
   "op_058": {
     "id": "op_058",
@@ -1034,7 +1034,7 @@
       "blink_rate_baseline": 11.8,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_059": {
     "id": "op_059",
@@ -1051,7 +1051,7 @@
       "blink_rate_baseline": 12.1,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_060": {
     "id": "op_060",
@@ -1085,7 +1085,7 @@
       "blink_rate_baseline": 14.0,
       "calibrated": true
     },
-    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (tritanopia) — high contrast + icons."
   },
   "op_062": {
     "id": "op_062",
@@ -1102,7 +1102,7 @@
       "blink_rate_baseline": 16.0,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (protanopia) — high contrast + icons."
   },
   "op_063": {
     "id": "op_063",
@@ -1221,7 +1221,7 @@
       "blink_rate_baseline": 15.2,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_070": {
     "id": "op_070",
@@ -1238,7 +1238,7 @@
       "blink_rate_baseline": 11.4,
       "calibrated": true
     },
-    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (tritanopia) — high contrast + icons."
   },
   "op_071": {
     "id": "op_071",
@@ -1255,7 +1255,7 @@
       "blink_rate_baseline": 11.4,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_072": {
     "id": "op_072",
@@ -1306,7 +1306,7 @@
       "blink_rate_baseline": 15.4,
       "calibrated": true
     },
-    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (tritanopia) — high contrast + icons."
   },
   "op_075": {
     "id": "op_075",
@@ -1323,7 +1323,7 @@
       "blink_rate_baseline": 14.3,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_076": {
     "id": "op_076",
@@ -1340,7 +1340,7 @@
       "blink_rate_baseline": 15.4,
       "calibrated": true
     },
-    "notes": "Colour-blind (deuteranopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (deuteranopia) — high contrast + icons."
   },
   "op_077": {
     "id": "op_077",
@@ -1357,7 +1357,7 @@
       "blink_rate_baseline": 12.2,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (protanopia) — high contrast + icons."
   },
   "op_078": {
     "id": "op_078",
@@ -1391,7 +1391,7 @@
       "blink_rate_baseline": 17.7,
       "calibrated": true
     },
-    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (tritanopia) — high contrast + icons."
   },
   "op_080": {
     "id": "op_080",
@@ -1442,7 +1442,7 @@
       "blink_rate_baseline": 17.1,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+    "notes": "Hard of hearing — haptic + flash alerts."
   },
   "op_083": {
     "id": "op_083",
@@ -1459,7 +1459,7 @@
       "blink_rate_baseline": 16.3,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_084": {
     "id": "op_084",
@@ -1527,7 +1527,7 @@
       "blink_rate_baseline": 14.6,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_088": {
     "id": "op_088",
@@ -1646,7 +1646,7 @@
       "blink_rate_baseline": 14.0,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_095": {
     "id": "op_095",
@@ -1663,7 +1663,7 @@
       "blink_rate_baseline": 13.6,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (protanopia) — high contrast + icons."
   },
   "op_096": {
     "id": "op_096",
@@ -1680,7 +1680,7 @@
       "blink_rate_baseline": 14.5,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_097": {
     "id": "op_097",
@@ -1731,7 +1731,7 @@
       "blink_rate_baseline": 15.9,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+    "notes": "Hard of hearing — haptic + flash alerts."
   },
   "op_100": {
     "id": "op_100",
@@ -1765,7 +1765,7 @@
       "blink_rate_baseline": 15.6,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_102": {
     "id": "op_102",
@@ -1782,7 +1782,7 @@
       "blink_rate_baseline": 13.1,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (protanopia) — high contrast + icons."
   },
   "op_103": {
     "id": "op_103",
@@ -1799,7 +1799,7 @@
       "blink_rate_baseline": 12.9,
       "calibrated": true
     },
-    "notes": "Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Trainee — conservative thresholds, simpler UI."
   },
   "op_104": {
     "id": "op_104",
@@ -1833,7 +1833,7 @@
       "blink_rate_baseline": 15.7,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts."
+    "notes": "Hard of hearing — haptic + flash alerts."
   },
   "op_106": {
     "id": "op_106",
@@ -1850,7 +1850,7 @@
       "blink_rate_baseline": 15.5,
       "calibrated": true
     },
-    "notes": "Colour-blind (tritanopia) \u2014 high contrast + icons."
+    "notes": "Colour-blind (tritanopia) — high contrast + icons."
   },
   "op_107": {
     "id": "op_107",
@@ -1867,7 +1867,7 @@
       "blink_rate_baseline": 11.7,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Hard of hearing — haptic + flash alerts. Trainee — conservative thresholds, simpler UI."
   },
   "op_108": {
     "id": "op_108",
@@ -1922,37 +1922,161 @@
   },
   "op_111": {
     "id": "op_111",
-    "name": "Hari Prasad",
-    "role": "Crane Operator",
-    "hearing": "normal",
-    "color_vision": "normal",
-    "language": "hi",
+    "name": "Onkar",
+    "role": "Excavator Operator",
     "experience": "expert",
-    "photo": "op_111.jpg",
+    "hearing": "normal",
+    "color_vision": "tritanopia",
+    "language": "en",
+    "notes": "Colour-blind (tritanopia) — blue/white + icons, never red-vs-green alone.",
     "calibration": {
-      "ear_baseline": 0.264,
-      "perclos_baseline": 0.053,
-      "blink_rate_baseline": 17.9,
-      "calibrated": true
+      "ear_baseline": 0.3044,
+      "perclos_baseline": 0.0135,
+      "blink_rate_baseline": 0.0,
+      "calibrated": true,
+      "baseline": {
+        "ear_mean": {
+          "mean": 0.3044434928962356,
+          "std": 0.019461623275778415
+        },
+        "ear_min": {
+          "mean": 0.2837543717119325,
+          "std": 0.06731678896278868
+        },
+        "ear_std": {
+          "mean": 0.014838345085366657,
+          "std": 0.032667486830479944
+        },
+        "perclos": {
+          "mean": 0.013501765857863553,
+          "std": 0.002758554376291716
+        },
+        "blink_rate": {
+          "mean": 0.0,
+          "std": 1.0
+        },
+        "mar_mean": {
+          "mean": 0.005524721756923118,
+          "std": 0.012175731015070948
+        },
+        "mar_max": {
+          "mean": 0.0077873206099100725,
+          "std": 0.020313396032275558
+        },
+        "is_yawn": {
+          "mean": 0.0,
+          "std": 1.0
+        },
+        "pitch_mean": {
+          "mean": 7.743080517851974,
+          "std": 1.0180370464578805
+        },
+        "yaw_mean": {
+          "mean": -4.246113669716035,
+          "std": 1.5780702816090384
+        },
+        "roll_mean": {
+          "mean": 0.5197220732414619,
+          "std": 0.5514918673217611
+        },
+        "pitch_std": {
+          "mean": 0.35204927055016616,
+          "std": 0.34188607340397387
+        }
+      }
     },
-    "notes": "Standard operating profile."
+    "enrolled": {
+      "by": "sup_001",
+      "machine": "local",
+      "at": "2026-09-12T18:41:50+00:00",
+      "poses": [
+        "center",
+        "turn_b",
+        "no_glasses",
+        "chin_down",
+        "turn_a"
+      ],
+      "vectors": 15
+    }
   },
   "op_112": {
     "id": "op_112",
-    "name": "Balaji Pandey",
-    "role": "Crane Operator",
+    "name": "Sounak",
+    "role": "Excavator Operator",
+    "experience": "trainee",
     "hearing": "normal",
     "color_vision": "normal",
-    "language": "hi",
-    "experience": "expert",
-    "photo": "op_112.jpg",
+    "language": "en",
+    "notes": "Trainee — earlier warnings, simpler UI.",
     "calibration": {
-      "ear_baseline": 0.283,
-      "perclos_baseline": 0.046,
-      "blink_rate_baseline": 17.3,
-      "calibrated": true
+      "ear_baseline": 0.2836,
+      "perclos_baseline": 0.0638,
+      "blink_rate_baseline": 1.1538,
+      "calibrated": true,
+      "baseline": {
+        "ear_mean": {
+          "mean": 0.28360654436488986,
+          "std": 0.0352487008953814
+        },
+        "ear_min": {
+          "mean": 0.2513329834339123,
+          "std": 0.0683448238460036
+        },
+        "ear_std": {
+          "mean": 0.02400318266660681,
+          "std": 0.0286008683807119
+        },
+        "perclos": {
+          "mean": 0.06378093728261514,
+          "std": 0.003625038167787984
+        },
+        "blink_rate": {
+          "mean": 1.1538461538461537,
+          "std": 0.3628297177322302
+        },
+        "mar_mean": {
+          "mean": 0.021407764638776184,
+          "std": 0.05229327754883204
+        },
+        "mar_max": {
+          "mean": 0.02572966222663592,
+          "std": 0.05891426699730519
+        },
+        "is_yawn": {
+          "mean": 0.0,
+          "std": 1.0
+        },
+        "pitch_mean": {
+          "mean": 7.663006109885311,
+          "std": 5.0395743204927586
+        },
+        "yaw_mean": {
+          "mean": 4.085986565695687,
+          "std": 9.495749790620886
+        },
+        "roll_mean": {
+          "mean": 12.931284853984062,
+          "std": 50.43626344859175
+        },
+        "pitch_std": {
+          "mean": 0.834547615759855,
+          "std": 1.2150018616870466
+        }
+      }
     },
-    "notes": "Standard operating profile."
+    "enrolled": {
+      "by": "sup_001",
+      "machine": "local",
+      "at": "2026-09-12T18:45:03+00:00",
+      "poses": [
+        "center",
+        "no_glasses",
+        "turn_b",
+        "turn_a",
+        "chin_down"
+      ],
+      "vectors": 15
+    }
   },
   "op_113": {
     "id": "op_113",
@@ -1986,7 +2110,7 @@
       "blink_rate_baseline": 14.3,
       "calibrated": true
     },
-    "notes": "Colour-blind (protanopia) \u2014 high contrast + icons. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Colour-blind (protanopia) — high contrast + icons. Trainee — conservative thresholds, simpler UI."
   },
   "op_115": {
     "id": "op_115",
@@ -2037,6 +2161,6 @@
       "blink_rate_baseline": 13.7,
       "calibrated": true
     },
-    "notes": "Hard of hearing \u2014 haptic + flash alerts. Trainee \u2014 conservative thresholds, simpler UI."
+    "notes": "Hard of hearing — haptic + flash alerts. Trainee — conservative thresholds, simpler UI."
   }
 }
