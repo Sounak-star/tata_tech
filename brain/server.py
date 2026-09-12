@@ -13,6 +13,7 @@ Run:
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 from typing import List
 
@@ -23,13 +24,16 @@ from fastapi.staticfiles import StaticFiles
 from . import paths
 from .demo_source import DemoSource, HybridLiveSource
 from .pipeline import Brain
-from .live_camera import BackgroundCameraTracker, HAS_MEDIAPIPE
+from .live_camera import BackgroundCameraTracker, RemoteCameraTracker, HAS_MEDIAPIPE
 from .blindspot import BackgroundBlindspotTracker
 
 TICK_HZ = 6.0  # readable playback rate for the demo (raise toward 10 for "live")
 CAMERA_INDEX = 0  # Configurable camera index
 
 app = FastAPI(title="SAARTHI — SmartCabin AI Copilot")
+
+# Remote tracker for browser-streamed webcam (always available if mediapipe installed)
+remote_tracker = RemoteCameraTracker() if HAS_MEDIAPIPE else None
 
 if HAS_MEDIAPIPE:
     tracker = BackgroundCameraTracker(camera_index=CAMERA_INDEX)
@@ -75,11 +79,35 @@ async def _loop() -> None:
     """The heartbeat: pull a signal, run the brain, broadcast the frame."""
     while True:
         signal = source.step()
+
+        # If remote tracker has features (browser cam), inject them into the signal
+        if remote_tracker and remote_tracker.is_available:
+            remote_feats = remote_tracker.get_latest_features()
+            if remote_feats is not None:
+                signal["features"] = remote_feats
+                signal["drowsiness"] = 0.0  # real features override demo drowsiness
+
         frame = brain.tick(signal)
         frame["phase"] = signal.get("phase")
         # Keep the camera preview overlay in sync with the latest fatigue decision.
         if HAS_MEDIAPIPE:
             tracker.set_fatigue_info(frame["fatigue"])
+        if remote_tracker and remote_tracker.is_available:
+            remote_tracker.set_fatigue_info(frame["fatigue"])
+            # Piggyback the annotated frame onto the WS broadcast so the
+            # dashboard can show the face-mesh overlay without MJPEG streaming
+            jpeg = remote_tracker.get_latest_annotated_frame()
+            if jpeg:
+                frame["cam_frame"] = base64.b64encode(jpeg).decode("ascii")
+                
+        # Inject debugging info for the dashboard
+        frame["cam_status"] = {
+            "has_mediapipe": HAS_MEDIAPIPE,
+            "tracker_exists": remote_tracker is not None,
+            "is_available": remote_tracker.is_available if remote_tracker else False,
+            "error": getattr(remote_tracker, "last_error", "No tracker") if remote_tracker else "No tracker"
+        }
+            
         await hub.broadcast(frame)
         await asyncio.sleep(1.0 / TICK_HZ)
 
@@ -87,13 +115,21 @@ async def _loop() -> None:
 @app.get("/video_feed")
 async def video_feed() -> StreamingResponse:
     """MJPEG stream of the annotated camera feed for the dashboard preview."""
-    if not HAS_MEDIAPIPE:
+    # Prefer local camera tracker; fall back to remote (browser) tracker
+    active_tracker = None
+    if HAS_MEDIAPIPE and tracker and tracker.cap and tracker.cap.isOpened():
+        active_tracker = tracker
+    elif remote_tracker and remote_tracker.is_available:
+        active_tracker = remote_tracker
+
+    if active_tracker is None:
         return JSONResponse({"error": "camera not available"}, status_code=503)
+
+    _trk = active_tracker  # capture for the closure
 
     async def _gen():
         while True:
-            jpeg = tracker.get_latest_annotated_frame()
-            # tracker always returns at least the placeholder frame — never None
+            jpeg = _trk.get_latest_annotated_frame()
             if jpeg is not None:
                 chunk = (
                     b"--frame\r\n"
@@ -103,7 +139,7 @@ async def video_feed() -> StreamingResponse:
                     + b"\r\n"
                 )
                 yield chunk
-            await asyncio.sleep(1.0 / 20.0)  # cap preview at 20 fps
+            await asyncio.sleep(1.0 / 20.0)
 
     return StreamingResponse(
         _gen(),
@@ -167,7 +203,9 @@ async def _startup() -> None:
 async def _shutdown() -> None:
     blindspot_tracker.stop()
     if HAS_MEDIAPIPE:
-        tracker.stop()  # signals the thread and calls cap.release()
+        tracker.stop()
+    if remote_tracker:
+        remote_tracker.stop()
 
 
 @app.websocket("/ws")
@@ -175,7 +213,12 @@ async def ws_endpoint(ws: WebSocket) -> None:
     await hub.connect(ws)
     try:
         while True:
-            await ws.receive_text()  # keepalive / client pings
+            msg = await ws.receive()
+            if "bytes" in msg and msg["bytes"] and remote_tracker:
+                # Binary message = JPEG frame from browser webcam
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, remote_tracker.feed_frame, msg["bytes"])
+            # Text messages are keepalive pings — ignore
     except WebSocketDisconnect:
         hub.disconnect(ws)
 
@@ -236,8 +279,10 @@ app.mount("/phone-static", StaticFiles(directory=str(paths.PHONE)), name="phone-
 
 def main() -> None:
     import uvicorn
+    import os
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":

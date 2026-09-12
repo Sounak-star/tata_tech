@@ -1,3 +1,11 @@
+---
+title: SAARTHI AI Copilot
+emoji: 🏗️
+colorFrom: yellow
+colorTo: red
+sdk: docker
+pinned: false
+---
 # SAARTHI — SmartCabin AI Copilot 🛠
 
 **Edge-AI copilot for operator safety on heavy machinery.** Fully offline, in the

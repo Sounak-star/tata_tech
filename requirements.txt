@@ -26,8 +26,8 @@ imbalanced-learn>=0.12      # SMOTE balancing (Pipeline A)
 tensorboard>=2.15           # PPO convergence monitoring
 
 # ── Optional: real webcam / vision path (not needed for the offline demo) ──
-# opencv-python>=4.8        # camera capture
-# mediapipe>=0.10           # face landmarks -> 12 fatigue features
+opencv-python-headless>=4.8  # camera capture (headless = no GUI deps, works on servers)
+mediapipe>=0.10           # face landmarks -> 12 fatigue features
 ultralytics>=8.1          # YOLO11-nano person detection (blind-spot zones)
 # deepface>=0.0.90          # face-ID operator recognition
 # onnxruntime>=1.17         # quantized model runtime (edge proof)
