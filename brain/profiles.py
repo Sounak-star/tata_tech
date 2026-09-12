@@ -69,9 +69,16 @@ class ProfileStore:
         return self._is_guest
 
     def active(self) -> dict:
-        if self._is_guest:
+        # Defensive: the active operator can be deleted out from under us, and
+        # an empty roster is legal. Falling back to the guest profile keeps the
+        # cab running on the strictest settings instead of raising mid-tick.
+        if self._is_guest or self._active is None:
             return GUEST_PROFILE
-        return self.profiles[self._active]
+        prof = self.profiles.get(self._active)
+        if prof is None:
+            self._is_guest = True
+            return GUEST_PROFILE
+        return prof
 
     def switch(self, operator_id: str) -> dict:
         if operator_id == GUEST_ID:
@@ -107,6 +114,27 @@ class ProfileStore:
             self.profiles[oid] = profile
             self.save()
             return self.profiles[oid]
+
+    def delete(self, operator_id: str) -> bool:
+        """Remove an operator's profile card. Returns False if unknown.
+
+        Deleting the ACTIVE operator drops the cab to the guest profile rather
+        than leaving a dangling pointer — the strictest settings are the right
+        place to land when we no longer know who this is.
+
+        The caller is responsible for removing the face template too: a template
+        with no profile would match a person the system can no longer describe.
+        """
+        if operator_id == GUEST_ID:
+            raise ValueError("the guest profile cannot be deleted")
+        with self._lock:
+            if self.profiles.pop(operator_id, None) is None:
+                return False
+            if self._active == operator_id:
+                self._active = next(iter(self.profiles), None)
+                self._is_guest = True
+            self.save()
+            return True
 
     def save(self) -> None:
         """Atomic write — a half-written profiles.json would brick every cab."""

@@ -449,6 +449,63 @@ def api_switch(operator_id: str) -> JSONResponse:
     except KeyError:
         return JSONResponse({"ok": False, "error": "unknown operator"}, status_code=404)
 
+@app.delete("/api/operator/{operator_id}")
+def api_delete_operator(operator_id: str, token: str = "") -> JSONResponse:
+    """Delete an operator: profile card AND face signature, together.
+
+    Deleting only one of the two leaves the system in a state it cannot explain.
+    An orphaned template matches a person there is no profile for; an orphaned
+    profile claims an operator the camera can no longer recognise. So this is one
+    operation, and it is PIN-gated and logged — erasing someone's biometric data
+    is a right they have under the DPDP Act, and a supervisor needs to be able to
+    show who exercised it and when.
+    """
+    rec = _check_token(token)
+    if rec is None:
+        return JSONResponse({"ok": False, "error": "supervisor PIN required"},
+                            status_code=401)
+
+    profile = brain.store.get(operator_id)
+    if profile is None:
+        return JSONResponse({"ok": False, "error": "unknown operator"},
+                            status_code=404)
+
+    was_active = brain.store.active_id == operator_id
+    templates = brain.faceid.templates
+    had_template = bool(templates and templates.summary(operator_id))
+
+    try:
+        removed = brain.store.delete(operator_id)
+    except ValueError as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+    if not removed:
+        return JSONResponse({"ok": False, "error": "unknown operator"},
+                            status_code=404)
+    if had_template:
+        templates.remove(operator_id)
+
+    # Whoever was recognised as this person must stop being recognised as them.
+    if brain.faceid.identifier is not None:
+        brain.faceid.identifier.reset()
+    if was_active:
+        brain.switch_to_guest(f"operator {operator_id} deleted")
+
+    brain.log.log(rec[0], 1, "admin", {
+        "title": "Operator deleted",
+        "detail": (f"{profile.get('name', operator_id)} ({operator_id}) removed by "
+                   f"{rec[1]}"
+                   f"{' — face signature erased' if had_template else ''}"),
+        "factors": [], "source": "admin",
+    }, 0.0)
+
+    print(f"[Admin] operator {operator_id} deleted by {rec[0]} "
+          f"(template={'yes' if had_template else 'none'})", flush=True)
+    return JSONResponse({"ok": True, "deleted": operator_id,
+                         "template_removed": had_template,
+                         "was_active": was_active,
+                         "remaining": len(brain.store.profiles)})
+
+
 @app.post("/api/trigger_blindspot")
 def api_trigger_blindspot() -> JSONResponse:
     if blindspot_tracker and getattr(blindspot_tracker, "is_available", False):
