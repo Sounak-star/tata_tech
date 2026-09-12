@@ -26,6 +26,7 @@ from brain.enrollment import (                                   # noqa: E402
 )
 from brain.faceid import EMBED_DIM, FaceEmbedder, l2               # noqa: E402
 from brain.personalize import SUPPORTED_LANGUAGES, personalise     # noqa: E402
+from brain.pose import metrics_from_landmarks                      # noqa: E402
 from brain.templates import TemplateStore                          # noqa: E402
 
 RNG = np.random.default_rng(77)
@@ -355,6 +356,63 @@ def test_drowsy_baseline_is_refused():
     assert sess.set_baseline(calib_rows())["message"] == "baseline captured"
     assert sess.step is Step.REVIEW
     print("ok  baseline: drowsy capture refused, a clean retry is accepted")
+
+
+def _pose_landmarks(head_y=0.40):
+    from brain.pose import L_EAR, L_SHOULDER, NOSE, R_EAR, R_SHOULDER
+    pts = [SimpleNamespace(x=0.5, y=0.5, visibility=0.0) for _ in range(33)]
+
+    def put(i, x, y):
+        pts[i] = SimpleNamespace(x=x, y=y, visibility=0.95)
+
+    put(L_SHOULDER, 0.34, 0.70); put(R_SHOULDER, 0.66, 0.70)
+    put(L_EAR, 0.45, head_y);    put(R_EAR, 0.55, head_y)
+    put(NOSE, 0.50, head_y + 0.03)
+    return pts
+
+
+def test_posture_baseline_is_captured_in_the_same_sitting():
+    """The 25 s fatigue baseline and the seated-posture baseline come from one
+    sitting — the operator is already there and already still."""
+    with tempfile.TemporaryDirectory() as td:
+        store = TemplateStore(path=Path(td) / "t.enc", keyfile=Path(td) / "k.key")
+        sess = EnrollmentSession(details(), StubEmbedder(unit()), shuffle=False)
+        drive_poses(sess)
+
+        for _ in range(40):                       # what the baseline step feeds in
+            sess.add_posture_sample(metrics_from_landmarks(_pose_landmarks()))
+        sess.set_baseline(calib_rows())
+
+        assert sess.posture_baseline is not None, "no posture baseline built"
+        assert sess.review()["ready"]
+
+        profiles: dict = {}
+        assert sess.commit(profiles, store)["ok"]
+
+        posture = profiles["op_900"]["calibration"].get("posture")
+        assert posture and posture["samples"] >= 40, posture
+        assert posture["head_height"][0] > 0
+        print(f"ok  enrolment: posture baseline stored "
+              f"({posture['samples']} samples) beside the fatigue baseline")
+
+
+def test_enrolment_without_pose_still_succeeds_but_warns():
+    """A machine with no pose model must still enrol operators — it just cannot
+    monitor them with their face covered, and should say so."""
+    with tempfile.TemporaryDirectory() as td:
+        store = TemplateStore(path=Path(td) / "t.enc", keyfile=Path(td) / "k.key")
+        sess = EnrollmentSession(details(), StubEmbedder(unit()), shuffle=False)
+        drive_poses(sess)
+        sess.set_baseline(calib_rows())           # no posture samples at all
+
+        review = sess.review()
+        assert review["ready"], "posture should not be required to enrol"
+        assert any("face is covered" in w for w in review["warnings"]), review
+
+        profiles: dict = {}
+        assert sess.commit(profiles, store)["ok"]
+        assert "posture" not in profiles["op_900"]["calibration"]
+    print("ok  no pose model: enrolment still completes, with a clear warning")
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
