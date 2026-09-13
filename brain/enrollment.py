@@ -106,12 +106,15 @@ class SupervisorAuth:
 
     def _load(self) -> dict:
         if self.path.exists():
-            return json.loads(self.path.read_text(encoding="utf-8"))
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+            self._warn_if_stale(data)
+            return data
         pin = BOOTSTRAP_PIN
         data = {"supervisors": {}}
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._write(data)
-        self.add_supervisor("sup_001", "Site Supervisor", pin)
+        self.add_supervisor("sup_001", "Site Supervisor", pin,
+                            source="bootstrap")
         print("\n" + "=" * 68, flush=True)
         print(f"  ENROLMENT PIN CREATED — supervisor 'sup_001' PIN: {pin}", flush=True)
         if pin == DEFAULT_ENROL_PIN:
@@ -121,6 +124,28 @@ class SupervisorAuth:
             print("  From SAARTHI_ENROL_PIN. Change it with add_supervisor().", flush=True)
         print("=" * 68 + "\n", flush=True)
         return json.loads(self.path.read_text(encoding="utf-8"))
+
+    @staticmethod
+    def _warn_if_stale(data: dict) -> None:
+        """Flag a machine still holding a pre-shared-default bootstrap PIN.
+
+        The shared default only seeds a machine that has never run the server,
+        so anyone who tested before it landed keeps their old random PIN and
+        finds the documented one rejected with no explanation. Deliberately a
+        WARNING and not an automatic re-seed: silently rewriting a credential at
+        startup would also clobber a PIN somebody set on purpose.
+        """
+        rec = data.get("supervisors", {}).get("sup_001")
+        if rec is None or rec.get("source"):
+            return
+        print("\n" + "!" * 68, flush=True)
+        print("!  This machine has an OLD random enrolment PIN.", flush=True)
+        print(f"!  The team default ({DEFAULT_ENROL_PIN}) will NOT work here — "
+              f"supervisors.json", flush=True)
+        print("!  predates it, and bootstrap only seeds a machine with no file.", flush=True)
+        print("!", flush=True)
+        print("!  Fix it with:   python -m brain.enrollment --reset-pin", flush=True)
+        print("!" * 68 + "\n", flush=True)
 
     def _write(self, data: dict) -> None:
         self.path.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -133,7 +158,8 @@ class SupervisorAuth:
     def _hash(pin: str, salt: bytes) -> str:
         return hashlib.scrypt(pin.encode(), salt=salt, n=2 ** 14, r=8, p=1, dklen=32).hex()
 
-    def add_supervisor(self, sup_id: str, name: str, pin: str) -> None:
+    def add_supervisor(self, sup_id: str, name: str, pin: str,
+                       source: str = "manual") -> None:
         if len(pin) < 4:
             raise ValueError("PIN must be at least 4 digits")
         with self._lock:
@@ -142,6 +168,10 @@ class SupervisorAuth:
             data.setdefault("supervisors", {})[sup_id] = {
                 "name": name, "salt": salt.hex(), "hash": self._hash(pin, salt),
                 "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                # Which PIN this record was seeded from. Records written before
+                # the shared default existed carry no marker, which is how we
+                # spot a machine still holding a random bootstrap PIN.
+                "source": source,
             }
             self._write(data)
             self._data = data
@@ -556,3 +586,39 @@ class EnrollmentSession:
             "error": self.error,
             "elapsed": round(time.time() - self.started, 1),
         }
+
+
+def _cli() -> int:
+    """`python -m brain.enrollment --reset-pin [PIN]`
+
+    Resets supervisor sup_001 to the shared default, or to a PIN given on the
+    command line. Exists because the shared-default bootstrap cannot reach a
+    machine that already has a supervisors.json.
+    """
+    import sys
+
+    argv = sys.argv[1:]
+    if "--reset-pin" not in argv:
+        print(__doc__)
+        return 0
+
+    idx = argv.index("--reset-pin")
+    pin = argv[idx + 1] if len(argv) > idx + 1 and not argv[idx + 1].startswith("-") \
+        else BOOTSTRAP_PIN
+
+    auth = SupervisorAuth()
+    try:
+        auth.add_supervisor("sup_001", "Site Supervisor", pin, source="reset")
+    except ValueError as exc:
+        print(f"refused: {exc}")
+        return 1
+
+    ok, who = auth.verify("sup_001", pin)
+    print(f"supervisor sup_001 PIN set to {pin} — verify: "
+          f"{'OK (' + who + ')' if ok else 'FAILED'}")
+    print(f"stored at {auth.path}")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(_cli())

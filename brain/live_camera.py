@@ -367,7 +367,13 @@ class BackgroundCameraTracker(FaceObserverMixin):
         Draw face mesh + EYES status + fatigue overlay onto a BGR copy of frame.
         Display-only — never touches features, calibration, or fatigue math.
         """
-        img = frame.copy()
+        # Mirror the preview. A camera shows you as others see you, which
+        # reads as 'inverted' to the person in the seat — every mirror and
+        # video-call preview they have ever used is flipped. Done here, on
+        # the frame, so the text drawn below stays readable; flipping the
+        # finished image in CSS would reverse the overlay too.
+        # Display only: features, calibration and fatigue math never see this.
+        img = cv2.flip(frame, 1)
 
         if landmarks is not None:
             eye_open  = ear >= EAR_CLOSED_THRESH
@@ -377,12 +383,12 @@ class BackgroundCameraTracker(FaceObserverMixin):
 
             # Full face mesh — 1 px green dots
             for lm in landmarks:
-                cv2.circle(img, (int(lm.x * width), int(lm.y * height)),
+                cv2.circle(img, (int((1.0 - lm.x) * width), int(lm.y * height)),
                            1, mesh_col, -1)
             # Eye landmarks — larger, coloured to show open/closed state
             for idx in LEFT_EYE_INDICES + RIGHT_EYE_INDICES:
                 lm = landmarks[idx]
-                cv2.circle(img, (int(lm.x * width), int(lm.y * height)),
+                cv2.circle(img, (int((1.0 - lm.x) * width), int(lm.y * height)),
                            4, eye_col, -1)
         else:
             eye_col   = (140, 140, 140)
@@ -748,7 +754,13 @@ class RemoteCameraTracker(FaceObserverMixin):
 
     def _annotate_frame(self, frame, landmarks, ear, height, width):
         """Draw face mesh + overlay onto a BGR copy of frame."""
-        img = frame.copy()
+        # Mirror the preview. A camera shows you as others see you, which
+        # reads as 'inverted' to the person in the seat — every mirror and
+        # video-call preview they have ever used is flipped. Done here, on
+        # the frame, so the text drawn below stays readable; flipping the
+        # finished image in CSS would reverse the overlay too.
+        # Display only: features, calibration and fatigue math never see this.
+        img = cv2.flip(frame, 1)
 
         if landmarks is not None:
             eye_open = ear >= EAR_CLOSED_THRESH
@@ -757,11 +769,11 @@ class RemoteCameraTracker(FaceObserverMixin):
             eye_label = f"EAR {ear:.3f}  EYES {'OPEN' if eye_open else 'CLOSED'}"
 
             for lm in landmarks:
-                cv2.circle(img, (int(lm.x * width), int(lm.y * height)),
+                cv2.circle(img, (int((1.0 - lm.x) * width), int(lm.y * height)),
                            1, mesh_col, -1)
             for idx in LEFT_EYE_INDICES + RIGHT_EYE_INDICES:
                 lm = landmarks[idx]
-                cv2.circle(img, (int(lm.x * width), int(lm.y * height)),
+                cv2.circle(img, (int((1.0 - lm.x) * width), int(lm.y * height)),
                            4, eye_col, -1)
         else:
             eye_col = (140, 140, 140)
