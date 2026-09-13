@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import math
 import sys
+import time
 from typing import Dict, List, Optional
 
 from .engine import HybridDecisionEngine
@@ -32,12 +33,13 @@ from .profiles import ProfileStore, FaceID
 from .reason import EventLog, build_reason_card
 from .risk import live_risk_score
 from .tilt import assess_tilt
+from .wage_log import WageLog
 
 
 # Mode-switch hysteresis, in ticks at server.TICK_HZ (6 Hz). A face flickers
 # constantly under vibration and glare; without hysteresis the mode would toggle
 # on every dropped frame and the operator would see a strobing banner.
-POSTURE_ENTER_TICKS = 12   # ~2 s of no face before falling back to posture
+POSTURE_ENTER_TICKS = 6   # ~1 s of no face before falling back to posture
 POSTURE_EXIT_TICKS = 6     # ~1 s of steady face before handing back
 
 
@@ -54,6 +56,8 @@ class Brain:
         # operator has no personal baseline of their own.
         self._session_fatigue = self.fatigue
         self.calibration_source = "session"
+        self.wage_log = WageLog()
+        self._shift_start = time.time()
 
         # Posture fallback: used only when the face signal is gone AND pose can
         # still see somebody in the seat.
@@ -72,6 +76,12 @@ class Brain:
         # An entry is written ONCE per rising edge (level > _prev_level), not every tick.
         self._prev_level = 0
 
+    def _close_shift(self) -> None:
+        current_id = self.store.active_id
+        if hasattr(self, '_shift_start') and current_id and not self.store.is_guest:
+            self.wage_log.log_shift(current_id, self._shift_start, time.time())
+        self._shift_start = time.time()
+
     def switch_operator(self, operator_id: str, *, source: str = "manual") -> dict:
         """Make `operator_id` active and re-personalise everything downstream.
 
@@ -82,6 +92,7 @@ class Brain:
         personal baseline, which would silently read the new face against the
         wrong normal.
         """
+        self._close_shift()
         prof = self.store.switch(operator_id)
         self.engine.reset()
         self._load_posture_baseline(prof)
@@ -118,9 +129,13 @@ class Brain:
 
     def switch_to_guest(self, reason: str = "unidentified") -> dict:
         """Fail-safe profile for an unrecognised operator."""
+        self._close_shift()
         prof = self.store.switch_to_guest()
         self.engine.reset()
         self._load_posture_baseline(prof)
+        # Ensure FaceID forgets the last operator so it rescans when they return
+        if self.faceid.identifier is not None:
+            self.faceid.identifier.reset()
         if self.fatigue is not self._session_fatigue:
             self.fatigue = self._session_fatigue
             self.calibration_source = "session"
@@ -161,6 +176,8 @@ class Brain:
                 # No face and no body: the seat is empty, not occluded.
                 self.posture_mode = False
                 self.posture_reason = "seat appears empty"
+                if not self.store.is_guest:
+                    self.switch_to_guest("seat appears empty")
 
     def tick(self, signal: dict) -> dict:
         self._tick += 1
@@ -263,12 +280,18 @@ class Brain:
             self.log.log(profile["id"], level, tier, card, risk["score"])
         self._prev_level = level
 
+        # Calculate ongoing shift duration if they are actively working
+        ongoing_secs = time.time() - self._shift_start if (not self.store.is_guest and profile["id"] == self.store.active_id) else 0.0
+        total_worked = self.wage_log.get_total_seconds(profile["id"]) + ongoing_secs
+        verified_hours_str = self.wage_log.format_total_hours(total_worked)
+
         return {
             "tick": self._tick,
             "operator": {
                 "id": profile["id"], "name": profile["name"], "role": profile["role"],
                 "hearing": profile["hearing"], "color_vision": profile["color_vision"],
                 "language": profile["language"], "experience": profile["experience"],
+                "verified_hours": verified_hours_str,
             },
             "fatigue": {
                 "p": fatigue["p_at_risk"],

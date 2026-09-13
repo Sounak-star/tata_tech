@@ -59,16 +59,18 @@ class IdentifyConfig:
     accept_cos: float = 0.40        # ArcFace cosine, 1:N accept threshold
     margin: float = 0.06            # top1 must beat top2 by this
     vote_fraction: float = 0.60     # share of scanned frames that must agree
-    scan_embeds: int = 12           # embeddings collected per scan
-    scan_timeout_s: float = 8.0
-    embed_every: int = 3            # embed 1 frame in N (cost control)
-    stable_frames: int = 3          # face present this long before scanning
+    scan_embeds: int = 4            # embeddings collected per scan
+    scan_timeout_s: float = 3.0
+    embed_every: int = 1            # embed 1 frame in N (cost control)
+    stable_frames: int = 1          # face present this long before scanning
     absent_frames: int = 12         # face gone this long => seat is empty
 
     # After an UNKNOWN verdict, stop re-scanning for a while. Without this the
-    # machine burns an embedding every few frames on an unenrolled face forever,
+    # dashboard flickers frantically as the system keeps re-trying a face it
+    # already knows it can't match.
+    unknown_hold_s: float = 1.0
     # and the dashboard flickers UNKNOWN/SCANNING. The seat emptying clears it.
-    unknown_cooldown_s: float = 20.0
+    unknown_cooldown_s: float = 1.0
 
     reverify_interval_s: float = 30.0
     reverify_cos: float = 0.32      # 1:1 is easier than 1:N — looser is correct

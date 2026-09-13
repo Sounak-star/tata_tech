@@ -2208,5 +2208,107 @@
       ],
       "vectors": 14
     }
+  },
+  "op_144": {
+    "id": "op_144",
+    "name": "Noel Binu",
+    "role": "Excavator Operator",
+    "experience": "intermediate",
+    "hearing": "normal",
+    "color_vision": "normal",
+    "language": "en",
+    "notes": "",
+    "calibration": {
+      "ear_baseline": 0.2772,
+      "perclos_baseline": 0.0593,
+      "blink_rate_baseline": 0.0,
+      "calibrated": true,
+      "baseline": {
+        "ear_mean": {
+          "mean": 0.27721370358867636,
+          "std": 0.018584205676821938
+        },
+        "ear_min": {
+          "mean": 0.26123293426052074,
+          "std": 0.044003538625044365
+        },
+        "ear_std": {
+          "mean": 0.011996147378068691,
+          "std": 0.01856270729248839
+        },
+        "perclos": {
+          "mean": 0.05933361444957107,
+          "std": 0.020550251217322967
+        },
+        "blink_rate": {
+          "mean": 0.0,
+          "std": 1.0
+        },
+        "mar_mean": {
+          "mean": 0.025225075086769896,
+          "std": 0.014849067318464783
+        },
+        "mar_max": {
+          "mean": 0.03949495329590877,
+          "std": 0.025659695380447968
+        },
+        "is_yawn": {
+          "mean": 0.0,
+          "std": 1.0
+        },
+        "pitch_mean": {
+          "mean": 4.625835108522894,
+          "std": 2.143668332861746
+        },
+        "yaw_mean": {
+          "mean": 2.373888058137327,
+          "std": 2.3105613609608926
+        },
+        "roll_mean": {
+          "mean": -0.5047073076467673,
+          "std": 0.5712396995048266
+        },
+        "pitch_std": {
+          "mean": 0.5013105045555624,
+          "std": 0.401932959815386
+        }
+      },
+      "posture": {
+        "head_height": [
+          0.695391375302362,
+          0.022951065151286976
+        ],
+        "shoulder_y": [
+          0.8732126221457361,
+          0.010014134432774702
+        ],
+        "head_forward": [
+          0.0071579921130133445,
+          0.02
+        ],
+        "shoulder_width": [
+          0.42330005119055397,
+          0.015183146148955114
+        ],
+        "sway": [
+          0.004262335944125049,
+          0.005777429086400182
+        ],
+        "samples": 263
+      }
+    },
+    "enrolled": {
+      "by": "sup_001",
+      "machine": "local",
+      "at": "2026-09-13T10:58:21+00:00",
+      "poses": [
+        "center",
+        "turn_a",
+        "no_glasses",
+        "turn_b",
+        "chin_down"
+      ],
+      "vectors": 15
+    }
   }
 }

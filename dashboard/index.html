@@ -345,6 +345,13 @@
           <span>Preferred language</span>
           <strong id="opLangBadge">—</strong>
         </div>
+        <div class="row" style="border: none; padding: 2px 0; background: rgba(76, 175, 80, 0.1); border-radius: 4px; padding: 4px; margin-top: 4px;">
+          <span>Verified Hours</span>
+          <strong id="opWageBadge" style="color: var(--green);">-</strong>
+        </div>
+        <div class="row" style="border: none; padding: 2px 0;">
+          <button id="viewWageLogBtn" style="width: 100%; margin-top: 5px; padding: 5px; background: #238636; color: white; border: none; border-radius: 4px; cursor: pointer;">View Full Wage Log Register</button>
+        </div>
         <div class="row" style="border: none; padding: 2px 0;">
           <span>Shift status</span>
           <strong style="color: var(--green); display: flex; align-items: center; gap: 4px;">
@@ -1523,6 +1530,11 @@ function render(f){
   const langNames = { en: 'English', hi: 'Hindi (हिंदी)', ta: 'Tamil (தமிழ்)', te: 'Telugu (తెలుగు)' };
   document.getElementById('opLangBadge').textContent = langNames[op.language] || op.language.toUpperCase();
 
+  const wageBadge = document.getElementById('opWageBadge');
+  if (wageBadge) {
+    wageBadge.textContent = op.verified_hours || '0 secs';
+  }
+
   // Hidden tags mapping for compatibility if needed
   const tags = [`🌐 ${op.language}`, `🎓 ${op.experience}`];
   if (isHearingImpaired)  tags.push('🦻 hearing-impaired');
@@ -1721,5 +1733,48 @@ function updateTimelineCount() {
 
 loadOps(); connect();
 </script>
+
+<div id="wageLogModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; width:400px; max-width:90%;">
+    <h2 style="margin-top:0;">Digital Wage Log Register</h2>
+    <table style="width:100%; text-align:left; border-collapse:collapse;">
+      <thead>
+        <tr style="border-bottom:1px solid #30363d;">
+          <th style="padding:8px 0;">Operator</th>
+          <th style="padding:8px 0; text-align:right;">Verified Time</th>
+        </tr>
+      </thead>
+      <tbody id="wageLogTableBody">
+      </tbody>
+    </table>
+    <div style="margin-top:20px; text-align:right;">
+      <button onclick="document.getElementById('wageLogModal').style.display='none'" style="padding:6px 12px; background:#21262d; color:#c9d1d9; border:1px solid #30363d; border-radius:4px; cursor:pointer;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('viewWageLogBtn').addEventListener('click', async () => {
+    try {
+      const res = await fetch('/api/wages');
+      const wages = await res.json();
+      const tbody = document.getElementById('wageLogTableBody');
+      tbody.innerHTML = '';
+      if (wages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" style="padding:8px 0; text-align:center; color:#8b949e;">No wages recorded yet.</td></tr>';
+      }
+      for (const w of wages) {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #30363d';
+        tr.innerHTML = `<td style="padding:8px 0;">${w.name}</td><td style="padding:8px 0; text-align:right; color:var(--green);">${w.formatted}</td>`;
+        tbody.appendChild(tr);
+      }
+      document.getElementById('wageLogModal').style.display = 'flex';
+    } catch (e) {
+      alert('Error fetching wages: ' + e.message);
+    }
+  });
+</script>
+
 </body>
 </html>

@@ -271,8 +271,10 @@ async def _loop() -> None:
                 # camera answer for this one.
                 signal.pop("features", None)
 
-        if pose_tracker is not None and pose_tracker.available:
+        if pose_tracker is not None and pose_tracker.available and active is not None:
             signal["pose"] = pose_tracker.latest
+        else:
+            signal.pop("pose", None)
 
         # Eyes covered means EAR/PERCLOS/blink are fiction, even though the
         # landmarker is still producing them. Treat that as no face signal.
@@ -429,19 +431,51 @@ async def _shutdown() -> None:
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket) -> None:
     await hub.connect(ws)
+    is_processing = [False]
     try:
         while True:
             msg = await ws.receive()
             if "bytes" in msg and msg["bytes"] and remote_tracker:
+                if is_processing[0]:
+                    continue
+                is_processing[0] = True
+                
                 # Binary message = JPEG frame from browser webcam
                 loop = asyncio.get_running_loop()
-                await loop.run_in_executor(None, remote_tracker.feed_frame, msg["bytes"])
+                fut = loop.run_in_executor(None, remote_tracker.feed_frame, msg["bytes"])
+                
+                def _done(f):
+                    loop.call_soon_threadsafe(lambda: is_processing.__setitem__(0, False))
+                fut.add_done_callback(_done)
             # Text messages are keepalive pings — ignore
     except WebSocketDisconnect:
         hub.disconnect(ws)
 
 
 # ── REST API ────────────────────────────────────────────────────────────
+@app.get("/api/wages")
+def api_wages() -> JSONResponse:
+    wages = brain.wage_log.get_all_wages()
+    # add ongoing shift if there is one
+    if not brain.store.is_guest and brain.store.active_id:
+        ongoing_secs = time.time() - brain._shift_start
+        wages[brain.store.active_id] = wages.get(brain.store.active_id, 0.0) + ongoing_secs
+    
+    # format them
+    results = []
+    for op_id, secs in wages.items():
+        prof = brain.store.get(op_id)
+        name = prof["name"] if prof else op_id
+        results.append({
+            "id": op_id,
+            "name": name,
+            "seconds": secs,
+            "formatted": brain.wage_log.format_total_hours(secs)
+        })
+    # sort by highest first
+    results.sort(key=lambda x: x["seconds"], reverse=True)
+    return JSONResponse(results)
+
 @app.get("/api/profiles")
 def api_profiles() -> JSONResponse:
     """Every profile, each tagged with whether it has a face template.
@@ -536,6 +570,22 @@ def api_trigger_blindspot() -> JSONResponse:
 @app.get("/api/timeline")
 def api_timeline() -> JSONResponse:
     return JSONResponse(brain.log.recent(30))
+
+
+@app.get("/api/wages/{operator_id}")
+def api_wages(operator_id: str) -> JSONResponse:
+    total_seconds = brain.wage_log.get_total_seconds(operator_id)
+    # Include ongoing shift time if they are active
+    if not brain.store.is_guest and brain.store.active_id == operator_id:
+        total_seconds += time.time() - getattr(brain, '_shift_start', time.time())
+    
+    return JSONResponse({
+        "ok": True,
+        "operator": operator_id,
+        "total_seconds": total_seconds,
+        "verified_hours": brain.wage_log.format_total_hours(total_seconds)
+    })
+
 
 
 @app.get("/api/health")

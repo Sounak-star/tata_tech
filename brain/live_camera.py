@@ -556,6 +556,7 @@ class RemoteCameraTracker(FaceObserverMixin):
     def __init__(self) -> None:
         self.latest_features: Optional[Dict[str, float]] = None
         self._features_ts = 0.0          # when latest_features was last written
+        self._last_frame_ts = 0.0
         self._lock = threading.Lock()
 
         self._preview_lock = threading.Lock()
@@ -566,7 +567,8 @@ class RemoteCameraTracker(FaceObserverMixin):
         cv2.putText(_ph, "Waiting for browser cam...", (18, 125),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.55, (160, 160, 160), 1, cv2.LINE_AA)
         _, _ph_buf = cv2.imencode('.jpg', _ph)
-        self._latest_annotated_frame: bytes = _ph_buf.tobytes()
+        self._ph_bytes = _ph_buf.tobytes()
+        self._latest_annotated_frame: bytes = self._ph_bytes
 
         self.last_error = None
         self._landmarker = None
@@ -611,6 +613,7 @@ class RemoteCameraTracker(FaceObserverMixin):
             return
 
         try:
+            self._last_frame_ts = time.time()
             arr = np.frombuffer(jpeg_bytes, dtype=np.uint8)
             frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
             if frame is None:
@@ -730,6 +733,8 @@ class RemoteCameraTracker(FaceObserverMixin):
         return self.features_age() <= FEATURES_MAX_AGE_SEC
 
     def get_latest_annotated_frame(self) -> Optional[bytes]:
+        if time.time() - self._last_frame_ts > 2.0:
+            return self._ph_bytes
         with self._preview_lock:
             return self._latest_annotated_frame
 

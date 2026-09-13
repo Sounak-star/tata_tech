@@ -59,8 +59,8 @@ L_EAR, R_EAR = 7, 8
 L_SHOULDER, R_SHOULDER = 11, 12
 
 MIN_VISIBILITY = 0.5        # per-landmark confidence to count as seen
-PRESENCE_FRAMES = 3         # consecutive frames of shoulders before "present"
-ABSENCE_FRAMES = 8          # consecutive frames without shoulders before "empty"
+PRESENCE_FRAMES = 2         # consecutive frames with shoulders to mark "present"
+ABSENCE_FRAMES = 3          # consecutive frames without shoulders before "empty"
 
 
 @dataclass
