@@ -47,6 +47,15 @@ from .templates import TemplateStore
 
 SUPERVISORS_JSON = Path(os.environ.get("SAARTHI_SUPERVISORS", str(DATA / "supervisors.json")))
 
+# Bootstrap PIN for a machine that has never been enrolled on. supervisors.json
+# is git-ignored (it holds PIN hashes), so a random bootstrap meant every fresh
+# clone got a different PIN and nobody on the team could enrol without first
+# reading it out of their own console. A shared, documented default fixes that;
+# the cold-start banner says loudly that it is a default, and a real deployment
+# overrides it with SAARTHI_ENROL_PIN or a later add_supervisor() call.
+DEFAULT_ENROL_PIN = "2027"
+BOOTSTRAP_PIN = os.environ.get("SAARTHI_ENROL_PIN", DEFAULT_ENROL_PIN)
+
 # Field vocabularies — these are exactly what personalise() branches on, so a
 # value outside them would silently degrade to a default delivery plan.
 EXPERIENCE = ("trainee", "intermediate", "expert")
@@ -98,15 +107,18 @@ class SupervisorAuth:
     def _load(self) -> dict:
         if self.path.exists():
             return json.loads(self.path.read_text(encoding="utf-8"))
-        # Bootstrap with a random PIN rather than a guessable default.
-        pin = f"{secrets.randbelow(10**6):06d}"
+        pin = BOOTSTRAP_PIN
         data = {"supervisors": {}}
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._write(data)
         self.add_supervisor("sup_001", "Site Supervisor", pin)
         print("\n" + "=" * 68, flush=True)
         print(f"  ENROLMENT PIN CREATED — supervisor 'sup_001' PIN: {pin}", flush=True)
-        print("  Shown once. Change it with SupervisorAuth.add_supervisor().", flush=True)
+        if pin == DEFAULT_ENROL_PIN:
+            print("  Shared default for the demo build. Override it with the", flush=True)
+            print("  SAARTHI_ENROL_PIN env var before any real deployment.", flush=True)
+        else:
+            print("  From SAARTHI_ENROL_PIN. Change it with add_supervisor().", flush=True)
         print("=" * 68 + "\n", flush=True)
         return json.loads(self.path.read_text(encoding="utf-8"))
 
