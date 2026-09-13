@@ -35,7 +35,7 @@ from .pose import PoseTracker
 from .blindspot import BackgroundBlindspotTracker
 
 TICK_HZ = 6.0  # readable playback rate for the demo (raise toward 10 for "live")
-CAMERA_INDEX = 0  # Configurable camera index
+CAMERA_INDEX = -1  # Configurable camera index
 
 app = FastAPI(title="SAARTHI — SmartCabin AI Copilot")
 
