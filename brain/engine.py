@@ -50,6 +50,11 @@ FATIGUE_HARD_SECONDS = 2.0
 SPEED_MOVING = 0.3
 TILT_CRITICAL = 25.0
 
+# Posture-mode escalation points. Lower than the face-mode equivalents because
+# posture sees drowsiness later; see brain/posture_fatigue.py for why.
+POSTURE_NUDGE = 0.30
+POSTURE_WARN = 0.50
+
 LEVEL_LABELS = {
     0: "All clear",
     1: "Nudge",
@@ -77,11 +82,17 @@ class HybridDecisionEngine:
     # ── Tier 1 ──────────────────────────────────────────────────────────
     def _hard_rules(
         self, fatigue_p: float, zone: int, tilt: float,
-        machine_speed: float, is_reversing: int,
+        machine_speed: float, is_reversing: int, posture_mode: bool = False,
     ) -> tuple[bool, str]:
         moving = machine_speed > SPEED_MOVING
 
-        if fatigue_p >= FATIGUE_CRITICAL and moving:
+        # In posture mode the fatigue number comes from shoulders and head angle,
+        # not from eyelids. That is real evidence but it is weaker and later, and
+        # it is not "eyes closed" — so it may not, on its own, stop the machine.
+        # The zone and tilt rules below are untouched: they never needed the face.
+        if posture_mode:
+            self._fatigue_critical_ticks = 0
+        elif fatigue_p >= FATIGUE_CRITICAL and moving:
             self._fatigue_critical_ticks += 1
         else:
             self._fatigue_critical_ticks = 0
@@ -105,10 +116,11 @@ class HybridDecisionEngine:
         machine_speed: float,
         is_reversing: int,
         experience: str = "expert",
+        posture_mode: bool = False,
     ) -> dict:
         """Return the alert decision for this tick."""
         emergency, reason = self._hard_rules(
-            fatigue_p, zone, tilt, machine_speed, is_reversing
+            fatigue_p, zone, tilt, machine_speed, is_reversing, posture_mode
         )
         if emergency:
             self._last_action = InterventionAction.NO_ACTION  # hard rule, not policy
@@ -147,6 +159,15 @@ class HybridDecisionEngine:
         # signal is present but the policy chose to stay silent.
         if experience == "trainee" and action == InterventionAction.NO_ACTION:
             if fatigue_p >= 0.35 or zone >= 1 or tilt >= 12.0:
+                action = InterventionAction.LEVEL_1_NUDGE
+
+        # Posture mode detects the same event later than PERCLOS would, so buy
+        # that back by alerting sooner. Losing the hard rule (above) has to be
+        # paid for somewhere, and an earlier warning is the safe side to err on.
+        if posture_mode:
+            if fatigue_p >= POSTURE_WARN and action < InterventionAction.LEVEL_2_WARNING:
+                action = InterventionAction.LEVEL_2_WARNING
+            elif fatigue_p >= POSTURE_NUDGE and action == InterventionAction.NO_ACTION:
                 action = InterventionAction.LEVEL_1_NUDGE
 
         self._last_action = action

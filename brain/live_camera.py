@@ -34,11 +34,43 @@ try:
 except ImportError:
     HAS_MEDIAPIPE = False
 
+# A face window is only valid for so long. Without this, a face lost to
+# sunglasses or a dust mask leaves `latest_features` frozen at the last good
+# reading and the pipeline keeps reporting it forever — the cab confidently
+# shows ALERT/OK while the operator falls asleep. Failing loudly beats that.
+FEATURES_MAX_AGE_SEC = 4.0   # ~2 windows at the browser's 5 fps
+
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
 MODEL_PATH = "face_landmarker.task"
 
 
-class BackgroundCameraTracker:
+class FaceObserverMixin:
+    """Lets face-ID / enrolment reuse the frame the tracker has already decoded
+    and landmarked, instead of standing up a second camera pipeline.
+
+    The observer is called on the tracker thread, so it must be quick and it
+    must never raise — an exception here would take the fatigue pipeline down
+    with it, which is a safety regression for a cosmetic feature.
+    """
+
+    face_observer = None
+
+    def set_face_observer(self, fn) -> None:
+        self.face_observer = fn
+
+    def _notify_face(self, frame, landmarks, has_face: bool,
+                     ear: float = 0.0, yaw: float = 0.0, pitch: float = 0.0) -> None:
+        fn = self.face_observer
+        if fn is None:
+            return
+        try:
+            fn(frame, landmarks, has_face=has_face, ear=float(ear or 0.0),
+               yaw=float(yaw or 0.0), pitch=float(pitch or 0.0))
+        except Exception as exc:                      # noqa: BLE001
+            print(f"[Camera] face observer error (ignored): {exc}", flush=True)
+
+
+class BackgroundCameraTracker(FaceObserverMixin):
     """Runs cv2.VideoCapture and MediaPipe FaceLandmarker in a daemon thread."""
 
     def __init__(self, camera_index: int = 0) -> None:
@@ -46,6 +78,7 @@ class BackgroundCameraTracker:
         self.cap = None
         
         self.latest_features: Optional[Dict[str, float]] = None
+        self._features_ts = 0.0          # when latest_features was last written
         self._lock = threading.Lock()
 
         # Preview state — written by the camera thread, read by /video_feed.
@@ -283,8 +316,28 @@ class BackgroundCameraTracker:
             self.cap = None
 
     def get_latest_features(self) -> Optional[Dict[str, float]]:
+        """Latest face features, or None once they are too old to trust.
+
+        Returning stale features is worse than returning nothing: the caller
+        cannot tell the difference, so it reports an old healthy reading as if
+        it were current.
+        """
         with self._lock:
+            if self.latest_features is None:
+                return None
+            if time.time() - self._features_ts > FEATURES_MAX_AGE_SEC:
+                return None
             return self.latest_features
+
+    def features_age(self) -> float:
+        """Seconds since the last valid face window (inf if there never was one)."""
+        with self._lock:
+            if self.latest_features is None:
+                return float("inf")
+            return time.time() - self._features_ts
+
+    def face_signal_ok(self) -> bool:
+        return self.features_age() <= FEATURES_MAX_AGE_SEC
 
     # ── Preview API ─────────────────────────────────────────────────────────
 
@@ -441,6 +494,10 @@ class BackgroundCameraTracker:
                         frame_data['pitch'] = pitch
                         frame_data['yaw'] = yaw
                         frame_data['roll'] = roll
+                        self._notify_face(frame, landmarks, True,
+                                          frame_data['ear'], yaw, pitch)
+                    else:
+                        self._notify_face(frame, None, False)
 
                     trailing_buffer.append(frame_data)
                     window_frames.append(frame_data)
@@ -470,6 +527,7 @@ class BackgroundCameraTracker:
                             }
                             with self._lock:
                                 self.latest_features = candidate
+                                self._features_ts = time.time()
                             print(
                                 f"[Camera win {window_idx}] VALID "
                                 f"EAR={row['ear_mean']:.3f} "
@@ -488,7 +546,7 @@ class BackgroundCameraTracker:
                         window_frames = []
 
 
-class RemoteCameraTracker:
+class RemoteCameraTracker(FaceObserverMixin):
     """
     Processes JPEG frames sent from the browser via WebSocket.
     Same interface as BackgroundCameraTracker but no local webcam needed.
@@ -497,6 +555,7 @@ class RemoteCameraTracker:
 
     def __init__(self) -> None:
         self.latest_features: Optional[Dict[str, float]] = None
+        self._features_ts = 0.0          # when latest_features was last written
         self._lock = threading.Lock()
 
         self._preview_lock = threading.Lock()
@@ -597,6 +656,10 @@ class RemoteCameraTracker:
                 frame_data['pitch'] = pitch
                 frame_data['yaw'] = yaw
                 frame_data['roll'] = roll
+                self._notify_face(frame, landmarks, True,
+                                  frame_data['ear'], yaw, pitch)
+            else:
+                self._notify_face(frame, None, False)
 
             self._trailing_buffer.append(frame_data)
             self._window_frames.append(frame_data)
@@ -626,6 +689,7 @@ class RemoteCameraTracker:
                     }
                     with self._lock:
                         self.latest_features = candidate
+                        self._features_ts = time.time()
                     print(
                         f"[RemoteCamera win {self._window_idx}] VALID "
                         f"EAR={row['ear_mean']:.3f} "
@@ -642,8 +706,28 @@ class RemoteCameraTracker:
             print(f"[RemoteCamera] Frame processing error: {e}", flush=True)
 
     def get_latest_features(self) -> Optional[Dict[str, float]]:
+        """Latest face features, or None once they are too old to trust.
+
+        Returning stale features is worse than returning nothing: the caller
+        cannot tell the difference, so it reports an old healthy reading as if
+        it were current.
+        """
         with self._lock:
+            if self.latest_features is None:
+                return None
+            if time.time() - self._features_ts > FEATURES_MAX_AGE_SEC:
+                return None
             return self.latest_features
+
+    def features_age(self) -> float:
+        """Seconds since the last valid face window (inf if there never was one)."""
+        with self._lock:
+            if self.latest_features is None:
+                return float("inf")
+            return time.time() - self._features_ts
+
+    def face_signal_ok(self) -> bool:
+        return self.features_age() <= FEATURES_MAX_AGE_SEC
 
     def get_latest_annotated_frame(self) -> Optional[bytes]:
         with self._preview_lock:

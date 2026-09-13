@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAARTHI — Operator Enrolment</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#e6edf3; --muted:#8b949e;
+    --green:#2ea043; --amber:#d29922; --red:#f85149; --blue:#1f6feb;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; background:var(--bg); color:var(--txt);
+    font-family:'Segoe UI',system-ui,sans-serif;
+  }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 20px; background:var(--panel); border-bottom:1px solid var(--line);
+  }
+  header h1 { font-size:16px; margin:0; letter-spacing:.5px; }
+  header .sub { color:var(--muted); font-size:12px; }
+  a { color:var(--blue); }
+
+  .wrap { max-width:1000px; margin:0 auto; padding:24px 20px 60px; }
+  .card {
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:20px; margin-bottom:18px;
+  }
+  .card h2 { margin:0 0 4px; font-size:15px; }
+  .card .hint { color:var(--muted); font-size:12.5px; margin:0 0 16px; line-height:1.5; }
+
+  label { display:block; font-size:12px; color:var(--muted); margin:0 0 5px; }
+  input, select, textarea {
+    width:100%; padding:9px 11px; border-radius:6px; font-size:13.5px;
+    background:#0d1117; color:var(--txt); border:1px solid var(--line);
+    font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .field { margin-bottom:2px; }
+
+  button {
+    padding:10px 18px; border-radius:6px; border:1px solid var(--line);
+    background:var(--blue); color:#fff; font-size:13.5px; font-weight:600;
+    cursor:pointer; font-family:inherit;
+  }
+  button.ghost { background:transparent; color:var(--txt); }
+  button.danger { background:transparent; color:var(--red); border-color:#5a2a2a; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .spacer { flex:1; }
+
+  .steps { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+  .steps div {
+    flex:1; min-width:90px; text-align:center; font-size:11px; padding:7px 4px;
+    border-radius:5px; background:#0d1117; color:var(--muted);
+    border:1px solid var(--line);
+  }
+  .steps div.on { background:#0d2137; color:#58a6ff; border-color:#1f6feb; }
+  .steps div.done { color:var(--green); border-color:#1f4a28; }
+
+  .stage { display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:20px; }
+  @media (max-width:820px) { .stage { grid-template-columns:1fr; } }
+  video { width:100%; border-radius:8px; background:#000; display:block; transform:scaleX(-1); }
+
+  .prompt {
+    font-size:20px; font-weight:600; text-align:center; padding:16px 12px;
+    background:#0d2137; border:1px solid #1f6feb; border-radius:8px; margin-bottom:12px;
+  }
+  .feedback { text-align:center; font-size:13px; color:var(--amber); min-height:20px; margin-top:10px; }
+  .feedback.good { color:var(--green); }
+
+  .poselist { list-style:none; padding:0; margin:0; font-size:12.5px; }
+  .poselist li {
+    display:flex; justify-content:space-between; padding:8px 10px;
+    border-bottom:1px solid var(--line); color:var(--muted);
+  }
+  .poselist li:last-child { border-bottom:none; }
+  .poselist li.on { color:var(--txt); background:#0d2137; border-radius:5px; }
+  .poselist li.done { color:var(--green); }
+
+  .bar { height:6px; background:#0d1117; border-radius:3px; overflow:hidden; margin-top:14px; }
+  .bar > div { height:100%; background:var(--blue); width:0; transition:width .3s; }
+
+  .banner { padding:11px 14px; border-radius:6px; font-size:13px; margin-bottom:14px; line-height:1.5; }
+  .banner.err { background:#3b0a0a; color:#ff9b95; border:1px solid #5a2a2a; }
+  .banner.ok  { background:#0d2a15; color:#7ee2a0; border:1px solid #1f4a28; }
+  .banner.warn{ background:#3a2600; color:#f0c674; border:1px solid #5a4420; }
+
+  .privacy {
+    font-size:11.5px; color:var(--muted); line-height:1.6;
+    border-left:2px solid var(--line); padding-left:12px; margin-top:16px;
+  }
+  .kv { font-size:12.5px; color:var(--muted); line-height:1.9; }
+  .kv b { color:var(--txt); font-weight:600; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>SAARTHI — Operator Enrolment</h1>
+    <div class="sub">In-cab registration · profile, face signature and fatigue baseline</div>
+  </div>
+  <div class="sub"><a href="/">← back to panel</a></div>
+</header>
+
+<div class="wrap">
+
+  <div class="steps">
+    <div id="st-pin"      class="on">1 · Supervisor</div>
+    <div id="st-details">2 · Profile</div>
+    <div id="st-poses">3 · Face capture</div>
+    <div id="st-baseline">4 · Baseline</div>
+    <div id="st-review">5 · Confirm</div>
+  </div>
+
+  <div id="err" class="banner err hidden"></div>
+
+  <!-- 1 ─ supervisor PIN ------------------------------------------------->
+  <section id="pane-pin" class="card">
+    <h2>Unlock enrolment</h2>
+    <p class="hint">
+      Enrolment writes a new operator profile and a face signature to this machine.
+      A supervisor PIN is required, and the enrolment is recorded against that
+      supervisor's ID.
+    </p>
+    <div class="grid">
+      <div class="field">
+        <label for="supId">Supervisor ID</label>
+        <input id="supId" value="sup_001" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="pin">PIN</label>
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button id="btnAuth">Unlock</button>
+    </div>
+  </section>
+
+  <!-- 2 ─ operator details ----------------------------------------------->
+  <section id="pane-details" class="card hidden">
+    <h2>Operator profile</h2>
+    <p class="hint">
+      These fields decide how alerts are <em>delivered</em> to this operator — never
+      whether an alert fires. Safety always decides what to warn about.
+    </p>
+    <div class="grid">
+      <div class="field"><label for="fId">Operator ID</label>
+        <input id="fId" placeholder="op_101" autocomplete="off" /></div>
+      <div class="field"><label for="fName">Full name</label>
+        <input id="fName" placeholder="Ravi Kumar" autocomplete="off" /></div>
+      <div class="field"><label for="fRole">Role</label>
+        <input id="fRole" value="Excavator Operator" autocomplete="off" /></div>
+      <div class="field"><label for="fExp">Experience</label>
+        <select id="fExp">
+          <option value="trainee">Trainee — earlier warnings, simpler UI</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="expert">Expert</option>
+        </select></div>
+      <div class="field"><label for="fHear">Hearing</label>
+        <select id="fHear">
+          <option value="normal">Normal</option>
+          <option value="impaired">Impaired — buzz + flash, never sound alone</option>
+        </select></div>
+      <div class="field"><label for="fColor">Colour vision</label>
+        <select id="fColor">
+          <option value="normal">Normal</option>
+          <option value="deuteranopia">Deuteranopia</option>
+          <option value="protanopia">Protanopia</option>
+          <option value="tritanopia">Tritanopia</option>
+        </select></div>
+      <div class="field"><label for="fLang">Alert language</label>
+        <select id="fLang">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी</option>
+          <option value="ta">தமிழ்</option>
+          <option value="te">తెలుగు</option>
+        </select></div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label for="fNotes">Notes (optional — filled in automatically if left blank)</label>
+      <textarea id="fNotes" rows="2"></textarea>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button id="btnStart">Start face capture</button>
+      <span class="sub" style="color:var(--muted);font-size:12px">
+        The camera opens on the next step.
+      </span>
+    </div>
+  </section>
+
+  <!-- 3 ─ pose capture ---------------------------------------------------->
+  <section id="pane-poses" class="card hidden">
+    <div class="stage">
+      <div>
+        <div id="prompt" class="prompt">Starting camera…</div>
+        <video id="vid" playsinline muted></video>
+        <canvas id="cvs" class="hidden"></canvas>
+        <div id="feedback" class="feedback"></div>
+        <div class="bar"><div id="poseBar"></div></div>
+      </div>
+      <div>
+        <h2>Capture steps</h2>
+        <p class="hint">The order is randomised each time — a photograph held up
+          to the camera cannot follow it.</p>
+        <ul id="poseList" class="poselist"></ul>
+        <div class="row" style="margin-top:16px">
+          <button id="btnSkip" class="ghost">Skip this step</button>
+        </div>
+        <div class="privacy">
+          <b>No photograph is created.</b> Each frame is converted to a set of
+          numbers in memory and discarded immediately. Nothing is written to disk
+          but the mathematical signature, and that is encrypted.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ─ baseline -------------------------------------------------------->
+  <section id="pane-baseline" class="card hidden">
+    <div class="stage">
+      <div>
+        <div id="basePrompt" class="prompt">Sit still, look ahead, stay awake</div>
+        <video id="vid2" playsinline muted></video>
+        <div id="baseFeedback" class="feedback"></div>
+        <div class="bar"><div id="baseBar"></div></div>
+      </div>
+      <div>
+        <h2>Fatigue baseline</h2>
+        <p class="hint">
+          25 seconds of alert, relaxed behaviour. This becomes this operator's
+          personal "normal" for eye closure and blink rate — so when they sit
+          down tomorrow, the machine already knows their baseline and does not
+          have to re-measure it.
+        </p>
+        <div class="banner warn" style="font-size:12px">
+          Keep your eyes open and blink normally. A baseline recorded while
+          already tired would make real fatigue look normal later — it will be
+          rejected.
+        </div>
+        <div class="row"><button id="btnBaseline">Start 25-second baseline</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 ─ review ---------------------------------------------------------->
+  <section id="pane-review" class="card hidden">
+    <h2>Confirm enrolment</h2>
+    <div id="reviewBody"></div>
+    <div class="row" style="margin-top:18px">
+      <button id="btnCommit">Save operator</button>
+      <button id="btnAbort" class="danger">Discard</button>
+    </div>
+  </section>
+
+  <!-- done ---------------------------------------------------------------->
+  <section id="pane-done" class="card hidden">
+    <div class="banner ok" id="doneMsg"></div>
+    <div class="row">
+      <a href="/"><button>Open the machine panel</button></a>
+      <button id="btnAnother" class="ghost">Enrol another operator</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ── state ──────────────────────────────────────────────────────────────
+let token = null, ws = null, stream = null, sendTimer = null, pollTimer = null;
+const $ = id => document.getElementById(id);
+
+function showErr(msg) {
+  const el = $('err');
+  if (!msg) { el.classList.add('hidden'); return; }
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function pane(name) {
+  ['pin','details','poses','baseline','review','done']
+    .forEach(p => $('pane-' + p).classList.toggle('hidden', p !== name));
+  const order = ['pin','details','poses','baseline','review'];
+  const idx = order.indexOf(name);
+  order.forEach((p, i) => {
+    const el = $('st-' + p);
+    el.classList.toggle('on', i === idx);
+    el.classList.toggle('done', idx === -1 ? true : i < idx);
+  });
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  let data = {};
+  try { data = await res.json(); } catch (e) { /* empty body */ }
+  if (!res.ok) {
+    throw new Error(data.error || (data.errors || []).join('; ') || ('HTTP ' + res.status));
+  }
+  return data;
+}
+
+const post = (path, body) => api(path, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(Object.assign({ token }, body || {}))
+});
+
+// ── 1. supervisor PIN ──────────────────────────────────────────────────
+$('btnAuth').onclick = async () => {
+  showErr('');
+  $('btnAuth').disabled = true;
+  try {
+    const r = await post('/api/enroll/auth',
+      { supervisor_id: $('supId').value.trim(), pin: $('pin').value });
+    token = r.token;
+    pane('details');
+  } catch (e) {
+    showErr(e.message);
+  } finally {
+    $('btnAuth').disabled = false;
+  }
+};
+
+// ── 2. profile form ────────────────────────────────────────────────────
+$('btnStart').onclick = async () => {
+  showErr('');
+  $('btnStart').disabled = true;
+  try {
+    await post('/api/enroll/start', {
+      id: $('fId').value.trim(),
+      name: $('fName').value.trim(),
+      role: $('fRole').value.trim(),
+      experience: $('fExp').value,
+      hearing: $('fHear').value,
+      color_vision: $('fColor').value,
+      language: $('fLang').value,
+      notes: $('fNotes').value.trim()
+    });
+    pane('poses');
+    await startCamera();
+    startPolling();
+  } catch (e) {
+    showErr(e.message);
+  } finally {
+    $('btnStart').disabled = false;
+  }
+};
+
+// ── camera: same 5 fps JPEG-over-WebSocket path the dashboard uses ─────
+async function startCamera() {
+  if (stream) return;
+  stream = await navigator.mediaDevices.getUserMedia({
+    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+    audio: false
+  });
+  for (const v of [$('vid'), $('vid2')]) { v.srcObject = stream; await v.play(); }
+
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  await new Promise(res => { ws.onopen = res; });
+
+  const cvs = $('cvs');
+  sendTimer = setInterval(() => {
+    const v = $('vid');
+    if (!ws || ws.readyState !== WebSocket.OPEN || !v.videoWidth) return;
+    cvs.width = v.videoWidth; cvs.height = v.videoHeight;
+    cvs.getContext('2d').drawImage(v, 0, 0);
+    cvs.toBlob(b => {
+      if (b && ws.readyState === WebSocket.OPEN) b.arrayBuffer().then(a => ws.send(a));
+    }, 'image/jpeg', 0.75);
+  }, 200);
+}
+
+function stopCamera() {
+  if (sendTimer) { clearInterval(sendTimer); sendTimer = null; }
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+
+// ── 3+4. poll session state ────────────────────────────────────────────
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(refresh, 400);
+}
+
+let lastStep = null;
+
+async function refresh() {
+  let s;
+  try { s = await api('/api/enroll/status'); } catch (e) { return; }
+  if (!s.active) return;
+
+  if (s.step === 'poses') {
+    $('prompt').textContent = s.prompt || '…';
+    $('btnSkip').disabled = !s.optional;
+    const fb = $('feedback');
+    fb.textContent = s.message || '';
+    fb.classList.toggle('good', s.message === 'captured');
+
+    const list = $('poseList');
+    list.innerHTML = (s.progress || []).map((p, i) => {
+      const cls = p.done ? 'done' : (i === s.pose_index ? 'on' : '');
+      const mark = p.done ? '✓' : `${p.captured}/${p.needed}`;
+      return `<li class="${cls}"><span>${p.prompt}</span><span>${mark}</span></li>`;
+    }).join('');
+
+    const total = (s.progress || []).reduce((a, p) => a + p.needed, 0) || 1;
+    $('poseBar').style.width = Math.round(100 * (s.captured || 0) / total) + '%';
+  }
+
+  if (s.step === 'baseline' && lastStep !== 'baseline') pane('baseline');
+  if (s.step === 'baseline') {
+    const got = s.baseline_progress || 0;
+    if (s.error) {
+      // Collection failed — say why, reset the countdown and let them retry.
+      if (baseTick) { clearInterval(baseTick); baseTick = null; }
+      $('baseFeedback').textContent = s.error;
+      $('basePrompt').textContent = 'Baseline not captured';
+      $('baseBar').style.width = '0';
+      $('btnBaseline').disabled = false;
+    } else if (baseTick) {
+      // Progress in windows, not just seconds — a countdown that reaches zero
+      // while nothing was captured tells the operator nothing useful.
+      $('baseFeedback').textContent = got
+        ? `${got} baseline window${got === 1 ? '' : 's'} captured`
+        : 'waiting for the camera to detect your face…';
+      $('baseFeedback').classList.toggle('good', got > 0);
+    }
+  }
+
+  if (s.step === 'review' && lastStep !== 'review') {
+    if (baseTick) { clearInterval(baseTick); baseTick = null; }
+    pane('review');
+    renderReview(s);
+  }
+  lastStep = s.step;
+}
+
+$('btnSkip').onclick = async () => {
+  try { await post('/api/enroll/skip'); } catch (e) { showErr(e.message); }
+};
+
+// ── baseline ───────────────────────────────────────────────────────────
+let baseTick = null;
+
+$('btnBaseline').onclick = async () => {
+  showErr('');
+  $('btnBaseline').disabled = true;
+  $('baseFeedback').textContent = '';
+  try {
+    const r = await post('/api/enroll/baseline');
+    const total = (r.seconds || 25) * 1000;
+    const t0 = Date.now();
+    if (baseTick) clearInterval(baseTick);
+    baseTick = setInterval(() => {
+      const pct = Math.min(100, 100 * (Date.now() - t0) / total);
+      $('baseBar').style.width = pct + '%';
+      const left = Math.max(0, Math.ceil((total - (Date.now() - t0)) / 1000));
+      $('basePrompt').textContent = left
+        ? `Sit still, look ahead — ${left}s`
+        : 'Finishing up…';
+    }, 200);
+  } catch (e) {
+    showErr(e.message);
+    $('btnBaseline').disabled = false;
+  }
+};
+
+// ── 5. review + commit ─────────────────────────────────────────────────
+function renderReview(s) {
+  const warn = (s.warnings || []).length
+    ? `<div class="banner warn">${s.warnings.join('<br>')}</div>` : '';
+  $('reviewBody').innerHTML = warn + `
+    <div class="kv">
+      <div><b>${$('fName').value || s.operator_id}</b> — ${$('fRole').value}</div>
+      <div>Face captures kept: <b>${s.vectors_kept}</b>${
+        s.vectors_dropped ? ` (${s.vectors_dropped} rejected)` : ''}</div>
+      <div>Fatigue baseline: <b>${s.step === 'review' ? 'captured' : 'pending'}</b></div>
+      <div>Experience: <b>${$('fExp').value}</b> ·
+           Hearing: <b>${$('fHear').value}</b> ·
+           Colour vision: <b>${$('fColor').value}</b> ·
+           Language: <b>${$('fLang').value}</b></div>
+    </div>
+    <div class="privacy">
+      Saving stores an encrypted mathematical signature and this profile card.
+      No image of this operator exists at any point, and the signature can be
+      deleted from the machine panel at any time.
+    </div>`;
+  $('btnCommit').disabled = !s.ready;
+}
+
+$('btnCommit').onclick = async () => {
+  showErr('');
+  $('btnCommit').disabled = true;
+  try {
+    const r = await post('/api/enroll/commit');
+    stopCamera();
+    $('doneMsg').innerHTML =
+      `<b>${r.operator.name}</b> enrolled — ${r.vectors} face captures and a personal ` +
+      `fatigue baseline saved. They are now the active operator, and the machine ` +
+      `will recognise them at sit-down without re-running calibration.`;
+    pane('done');
+  } catch (e) {
+    showErr(e.message);
+    $('btnCommit').disabled = false;
+  }
+};
+
+$('btnAbort').onclick = async () => {
+  try { await post('/api/enroll/abort'); } catch (e) { /* nothing to keep */ }
+  stopCamera();
+  location.reload();
+};
+
+$('btnAnother').onclick = () => location.reload();
+window.addEventListener('beforeunload', stopCamera);
+</script>
+</body>
+</html>

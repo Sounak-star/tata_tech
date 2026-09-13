@@ -36,6 +36,14 @@
     --buzz-lvl3-border: #ffa726;
   }
 
+  .pchip {
+    padding:3px 8px; border-radius:10px; border:1px solid var(--line);
+    background:#0d1117; color:var(--muted); white-space:nowrap;
+  }
+  .pchip.ok   { color:#7ee2a0; border-color:#1f4a28; }
+  .pchip.warn { color:#f0c674; border-color:#5a4420; }
+  .pchip.bad  { color:#ff9b95; border-color:#5a2a2a; }
+
   /* ── Base & Viewport constraints (Just One Dashboard) ───────────── */
   * { box-sizing:border-box; }
   html, body {
@@ -301,6 +309,9 @@
 <header>
   <h1>🛠 SAARTHI · SmartCabin AI Copilot</h1>
   <div class="status">
+    <span id="faceidPill" title="Face recognition status"
+          style="padding:3px 9px;border-radius:11px;border:1px solid var(--line);
+                 background:#0d1117;font-size:11px;">face ID: —</span> &nbsp;|&nbsp;
     <span id="conn">● connecting…</span> &nbsp;|&nbsp;
     <span class="phase" id="phase"></span> &nbsp;|&nbsp;
     <span id="backend"></span>
@@ -500,6 +511,24 @@
         <div class="muted" id="tiltStatus"></div>
       </div>
     </div>
+  <!-- Posture mode: shown when the face is hidden and we are reading the body
+       instead. Deliberately distinct styling — posture is weaker, later evidence
+       than PERCLOS and must never look like the same measurement. -->
+  <div id="postureChips" style="display:flex; gap:5px; flex-wrap:wrap;
+       margin:0 0 10px; font-size:10.5px;">
+    <span class="pchip" id="chipFace">face: —</span>
+    <span class="pchip" id="chipEyes">eyes: —</span>
+    <span class="pchip" id="chipBody">body: —</span>
+    <span class="pchip" id="chipBase">baseline: —</span>
+    <span class="pchip" id="chipMode">mode: —</span>
+  </div>
+
+  <div id="postureBanner" style="display:none; margin:0 0 10px; padding:9px 13px;
+       border-radius:6px; background:#3a2600; color:#f0c674;
+       border:1px solid #5a4420; font-size:12.5px; line-height:1.5;">
+    <b>POSTURE MODE</b> — <span id="postureText">face not visible</span>
+  </div>
+
     
     <!-- Reason card -->
     <div class="card" style="flex-shrink: 0;">
@@ -544,16 +573,85 @@
     <!-- Searchable Operator Directory card (STICKY search bar) -->
     <div class="card" style="flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; min-height: 180px;">
       <h2>Operator directory</h2>
+      <!-- Clicking a name latches a manual override so a bad match cannot yank
+           the profile away. Re-identify releases that latch when the operator
+           changes, without restarting the machine. -->
+      <div style="display:flex; gap:5px; margin-bottom:8px; flex-shrink:0;">
+        <button id="btnReidentify" title="Forget who is in the seat and scan again"
+                style="flex:1; padding:5px 6px; font-size:10.5px; font-weight:600;
+                       white-space:nowrap; cursor:pointer; background:#21262d;
+                       color:var(--txt); border:1px solid var(--line); border-radius:5px;"
+                >&#8635; Re-identify</button>
+        <button id="btnAutoFace" title="Automatic face recognition on/off"
+                style="padding:5px 9px; font-size:10.5px; font-weight:600;
+                       white-space:nowrap; cursor:pointer; background:#21262d;
+                       color:var(--muted); border:1px solid var(--line); border-radius:5px;"
+                >auto: &mdash;</button>
+      </div>
       <!-- Sticky search input -->
       <input type="text" id="opSearchInput" placeholder="Search 100+ operators..." 
              style="width: 100%; padding: 6px 10px; margin-bottom: 8px; background: #0d1117; color: #fff; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; outline: none; transition: border-color .15s; flex-shrink: 0;" />
       
+
+      <!-- Enrolment entry point. Registers a new operator on THIS cab camera:
+           profile card, face signature and personal fatigue baseline in one
+           sitting. Supervisor PIN required. -->
+      <a href="/enroll" style="text-decoration:none; flex-shrink:0;">
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px;
+                    margin-bottom:8px; border:1px dashed var(--line); border-radius:6px;
+                    background:#0d1117; color:var(--txt); font-size:12px; cursor:pointer;"
+             onmouseover="this.style.borderColor='var(--blue)';this.style.color='#58a6ff'"
+             onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--txt)'">
+          <span style="font-size:15px; line-height:1;">&#65291;</span>
+          <div>
+            <div style="font-weight:600;">Enrol new operator</div>
+            <div style="color:var(--muted); font-size:10.5px;">
+              Profile + face + baseline &middot; supervisor PIN
+            </div>
+          </div>
+        </div>
+      </a>
       <!-- Scrollable operator list -->
       <div id="opDirectoryList" style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line); border-radius: 6px; padding: 4px; background: #0d1117;">
         <div id="opButtons"></div> <!-- compatibility div -->
       </div>
     </div>
   </section>
+</div>
+
+
+<!-- Delete confirmation. Deliberately explicit about what is erased: the face
+     signature is biometric data and its removal is not undoable, so the dialog
+     names it rather than saying a vague "are you sure?". -->
+<div id="delOverlay" style="display:none; position:fixed; inset:0; z-index:900;
+     background:rgba(0,0,0,.6); align-items:center; justify-content:center;">
+  <div style="background:var(--panel); border:1px solid var(--line); border-radius:10px;
+              padding:20px; width:min(420px,92vw); font-size:13px;">
+    <h3 style="margin:0 0 8px; font-size:15px;">Delete operator</h3>
+    <div id="delWho" style="color:var(--txt); margin-bottom:6px;"></div>
+    <div id="delWhat" style="color:var(--muted); font-size:11.5px; line-height:1.6;
+         margin-bottom:14px;"></div>
+    <div id="delAuth">
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <input id="delSup" value="sup_001" placeholder="Supervisor ID"
+               style="flex:1; padding:7px 9px; background:#0d1117; color:var(--txt);
+                      border:1px solid var(--line); border-radius:5px; font-size:12.5px;" />
+        <input id="delPin" type="password" inputmode="numeric" placeholder="PIN"
+               style="width:110px; padding:7px 9px; background:#0d1117; color:var(--txt);
+                      border:1px solid var(--line); border-radius:5px; font-size:12.5px;" />
+      </div>
+    </div>
+    <div id="delErr" style="display:none; color:#ff9b95; font-size:11.5px;
+         margin-bottom:10px;"></div>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button id="delCancel" style="padding:7px 14px; font-size:12.5px; background:transparent;
+              color:var(--txt); border:1px solid var(--line); border-radius:5px;
+              cursor:pointer;">Cancel</button>
+      <button id="delGo" style="padding:7px 14px; font-size:12.5px; background:#8b2020;
+              color:#fff; border:1px solid #5a2a2a; border-radius:5px; cursor:pointer;">
+        Delete permanently</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -917,6 +1015,40 @@ async function loadOps(){
   const r = await fetch('/api/profiles');
   _allProfiles = await r.json();
   
+  const reidBtn = document.getElementById('btnReidentify');
+  if (reidBtn) reidBtn.onclick = async () => {
+    reidBtn.disabled = true;
+    reidBtn.textContent = 'scanning…';
+    try { await fetch('/api/faceid/reidentify', { method: 'POST' }); }
+    finally {
+      setTimeout(() => {
+        reidBtn.disabled = false;
+        reidBtn.innerHTML = '\u21BB Re-identify';
+      }, 1500);
+    }
+  };
+
+  const autoBtn = document.getElementById('btnAutoFace');
+  if (autoBtn) autoBtn.onclick = async () => {
+    const turningOn = !autoBtn.textContent.includes('on');
+    await fetch('/api/faceid/auto', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: turningOn })
+    });
+  };
+
+  const delGo = document.getElementById('delGo');
+  if (delGo) delGo.onclick = runDelete;
+  const delCancel = document.getElementById('delCancel');
+  if (delCancel) delCancel.onclick = closeDelete;
+  const delOverlay = document.getElementById('delOverlay');
+  if (delOverlay) delOverlay.onclick = (e) => {
+    if (e.target === delOverlay) closeDelete();
+  };
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDelete();
+  });
+
   const searchInput = document.getElementById('opSearchInput');
   searchInput.addEventListener('input', (e) => {
     renderDirectory(e.target.value);
@@ -929,13 +1061,28 @@ async function loadOps(){
     `fatigue:${h.fatigue_backend} · vision:${h.person_backend}`;
 }
 
+// Enrolled operators are the ones the machine can actually recognise, so they
+// are what the directory shows. The full roster stays one click away: face ID
+// failing must never stop a supervisor selecting a rostered operator by hand.
+let _showAllOperators = false;
+
+function toggleShowAll() {
+  _showAllOperators = !_showAllOperators;
+  renderDirectory(document.getElementById('opSearchInput').value);
+}
+
 function renderDirectory(query = '') {
   const box = document.getElementById('opDirectoryList');
   box.innerHTML = '';
   
   const cleanQuery = query.toLowerCase().trim();
   
-  const filtered = Object.values(_allProfiles).filter(o => {
+  const all = Object.values(_allProfiles);
+  const enrolledCount = all.filter(o => o.enrolled).length;
+  const pool = (_showAllOperators || enrolledCount === 0)
+    ? all : all.filter(o => o.enrolled);
+
+  const filtered = pool.filter(o => {
     const name = o.name.toLowerCase();
     const id = o.id.toLowerCase();
     const role = o.role.toLowerCase();
@@ -960,6 +1107,16 @@ function renderDirectory(query = '') {
     if (idxB !== -1) return 1;
     return a.name.localeCompare(b.name);
   });
+
+  if (!filtered.length) {
+    const empty = document.createElement('div');
+    empty.style = 'padding:14px 10px; color:var(--muted); font-size:11px; line-height:1.6; text-align:center;';
+    empty.innerHTML = enrolledCount === 0
+      ? 'No operators enrolled on this machine yet.<br>Use <b>Enrol new operator</b> above to register one.'
+      : (cleanQuery ? 'No enrolled operator matches that search.'
+                    : 'No enrolled operators to show.');
+    box.appendChild(empty);
+  }
 
   filtered.forEach(o => {
     const item = document.createElement('div');
@@ -989,8 +1146,107 @@ function renderDirectory(query = '') {
     `;
     
     item.onclick = () => fetch('/api/operator/' + o.id, { method:'POST' });
+
+    const del = document.createElement('button');
+    del.textContent = '\u2715';
+    del.title = 'Delete this operator';
+    del.style = 'flex-shrink:0; width:20px; height:20px; line-height:1; padding:0;' +
+                'background:transparent; color:var(--muted); border:1px solid transparent;' +
+                'border-radius:4px; cursor:pointer; font-size:11px;';
+    del.onmouseover = () => { del.style.color = '#ff9b95';
+                              del.style.borderColor = '#5a2a2a'; };
+    del.onmouseout  = () => { del.style.color = 'var(--muted)';
+                              del.style.borderColor = 'transparent'; };
+    // Must not also select the operator we are about to remove.
+    del.onclick = (e) => { e.stopPropagation(); openDelete(o); };
+    item.appendChild(del);
+
     box.appendChild(item);
   });
+
+  if (enrolledCount > 0) {
+    const foot = document.createElement('div');
+    foot.style = 'padding:8px 6px 4px; text-align:center; font-size:10.5px; color:var(--muted);';
+    const others = Object.keys(_allProfiles).length - enrolledCount;
+    foot.innerHTML = _showAllOperators
+      ? `Showing all operators &middot; <a href="#" id="toggleAllOps" style="color:#58a6ff;">show enrolled only (${enrolledCount})</a>`
+      : `${enrolledCount} enrolled &middot; <a href="#" id="toggleAllOps" style="color:#58a6ff;">show all ${others} others</a>`;
+    box.appendChild(foot);
+    const link = document.getElementById('toggleAllOps');
+    if (link) link.onclick = (e) => { e.preventDefault(); toggleShowAll(); };
+  }
+}
+
+// ── Delete an operator ──────────────────────────────────────────────────
+// The supervisor token is cached for the session so a run of deletions does not
+// re-prompt, but it still expires server-side (15 min) like any other.
+let _supToken = null;
+let _delTarget = null;
+
+function openDelete(op) {
+  _delTarget = op;
+  document.getElementById('delWho').innerHTML =
+    `<b>${op.name}</b> — ${op.role} <span style="color:var(--muted)">(${op.id})</span>`;
+  document.getElementById('delWhat').innerHTML = op.enrolled
+    ? 'Removes the profile card <b>and erases the face signature</b>. '
+      + 'This machine will no longer recognise them. Cannot be undone.'
+    : 'Removes the profile card. This operator has no face signature on this machine.';
+  document.getElementById('delAuth').style.display = _supToken ? 'none' : 'block';
+  const err = document.getElementById('delErr');
+  err.style.display = 'none';
+  document.getElementById('delOverlay').style.display = 'flex';
+}
+
+function closeDelete() {
+  document.getElementById('delOverlay').style.display = 'none';
+  _delTarget = null;
+}
+
+function delError(msg) {
+  const err = document.getElementById('delErr');
+  err.textContent = msg;
+  err.style.display = 'block';
+}
+
+async function ensureToken() {
+  if (_supToken) return _supToken;
+  const res = await fetch('/api/enroll/auth', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      supervisor_id: document.getElementById('delSup').value.trim(),
+      pin: document.getElementById('delPin').value })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.token) throw new Error(data.error || 'PIN rejected');
+  _supToken = data.token;
+  return _supToken;
+}
+
+async function runDelete() {
+  const go = document.getElementById('delGo');
+  const op = _delTarget;
+  if (!op) return;
+  go.disabled = true;
+  try {
+    const token = await ensureToken();
+    const res = await fetch(
+      `/api/operator/${encodeURIComponent(op.id)}?token=${encodeURIComponent(token)}`,
+      { method: 'DELETE' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 401) _supToken = null;   // expired — ask again
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+    const r = await fetch('/api/profiles');
+    _allProfiles = await r.json();
+    renderDirectory(document.getElementById('opSearchInput').value);
+    closeDelete();
+  } catch (e) {
+    document.getElementById('delAuth').style.display = _supToken ? 'none' : 'block';
+    delError(e.message);
+  } finally {
+    go.disabled = false;
+  }
 }
 
 // ── Personalized Safety Recommendations ─────────────────────────────────
@@ -1118,6 +1374,107 @@ function render(f){
     if (camVideo && camVideo.style.display !== 'none') {
       camVideo.style.display = 'none';
     }
+  }
+
+  // ── posture chain readout ───────────────────────────────────────────
+  if (f.posture) {
+    const set = (id, text, cls) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'pchip ' + cls;
+    };
+    const trk = f.posture.tracker || {};
+    const age = f.posture.face_age;
+
+    if (age === null || age === undefined) {
+      set('chipFace', 'face: never seen', 'bad');
+    } else if (age < 4) {
+      set('chipFace', `face: live (${age.toFixed(1)}s)`, 'ok');
+    } else {
+      set('chipFace', `face: LOST ${age.toFixed(0)}s`, 'warn');
+    }
+
+    // A tracked face is not necessarily a VISIBLE one. Sunglasses leave the mesh
+    // fitted, so this chip is the one that explains a switch the face chip cannot.
+    const occ = f.posture.occlusion || {};
+    if (!occ.valid) {
+      set('chipEyes', 'eyes: —', '');
+    } else if (occ.eyes_covered_stable) {
+      set('chipEyes', `eyes: COVERED (${(occ.eye_ratio ?? 0).toFixed(2)})`, 'bad');
+    } else if (occ.mouth_covered) {
+      set('chipEyes', `eyes: visible · mouth covered`, 'warn');
+    } else {
+      set('chipEyes', `eyes: visible (${(occ.eye_ratio ?? 0).toFixed(2)})`, 'ok');
+    }
+
+    if (!trk.available) {
+      set('chipBody', 'body: pose model off', 'bad');
+    } else if (f.posture.present) {
+      set('chipBody', `body: detected (${trk.detections || 0})`, 'ok');
+    } else {
+      set('chipBody', `body: none (${trk.frames_scored || 0} scanned)`, 'warn');
+    }
+
+    set('chipBase', f.posture.ready ? 'baseline: ready' : 'baseline: MISSING',
+        f.posture.ready ? 'ok' : 'bad');
+
+    set('chipMode', f.posture.mode ? 'mode: POSTURE' : 'mode: face',
+        f.posture.mode ? 'warn' : 'ok');
+  }
+
+  // ── posture mode banner ─────────────────────────────────────────────
+  if (f.posture) {
+    const pb = document.getElementById('postureBanner');
+    const pt = document.getElementById('postureText');
+    if (pb && pt) {
+      if (f.posture.mode) {
+        const s = f.posture.sigmas || {};
+        const bits = Object.entries(s)
+          .filter(([, v]) => v > 1)
+          .sort((a, b) => b[1] - a[1])
+          .map(([k, v]) => `${k.replace('_', ' ')} ${Number(v).toFixed(1)} SD`);
+        pt.textContent = f.posture.ready
+          ? (bits.length
+              ? `face not visible — reading posture: ${bits.join(', ')}`
+              : 'face not visible — posture normal, monitoring continues')
+          : 'face not visible and no posture baseline for this operator — '
+            + 'fatigue monitoring is DEGRADED';
+        pb.style.background = f.posture.ready ? '#3a2600' : '#3b0a0a';
+        pb.style.color = f.posture.ready ? '#f0c674' : '#ff9b95';
+        pb.style.borderColor = f.posture.ready ? '#5a4420' : '#5a2a2a';
+        pb.style.display = 'block';
+      } else {
+        pb.style.display = 'none';
+      }
+    }
+  }
+
+  // ── face ID pill ────────────────────────────────────────────────────
+  if (f.faceid) {
+    const autoBtn = document.getElementById('btnAutoFace');
+    if (autoBtn) {
+      const on = f.faceid.auto !== false;
+      autoBtn.textContent = 'auto: ' + (on ? 'on' : 'off');
+      autoBtn.style.color = on ? '#2ea043' : 'var(--muted)';
+      autoBtn.style.borderColor = on ? '#1f4a28' : 'var(--line)';
+    }
+  }
+  if (f.faceid) {
+    const fid = f.faceid, pill = document.getElementById('faceidPill');
+    let label, colour;
+    if (f.enrolling)                   { label = 'enrolling…';       colour = '#d29922'; }
+    else if (!fid.available)           { label = 'face ID: off';     colour = '#8b949e'; }
+    else if (fid.guest)                { label = 'unidentified';     colour = '#f85149'; }
+    else if (fid.state === 'scanning') { label = 'identifying…';     colour = '#d29922'; }
+    else if (fid.manual)               { label = 'operator: manual'; colour = '#8b949e'; }
+    else if (fid.state === 'locked')   { label = 'face ID: locked';  colour = '#2ea043'; }
+    else                               { label = 'face ID: ready';   colour = '#8b949e'; }
+    pill.textContent = label;
+    pill.style.color = colour;
+    pill.style.borderColor = (colour === '#8b949e') ? 'var(--line)' : colour;
+    pill.title = [fid.reason, fid.error, 'baseline: ' + (fid.calibration_source || '—')]
+                   .filter(Boolean).join(' · ');
   }
 
   // ── operator ────────────────────────────────────────────────────────

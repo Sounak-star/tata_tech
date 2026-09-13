@@ -26,10 +26,19 @@ from .engine import HybridDecisionEngine
 from .fatigue import FatigueEngine, synth_window
 from .persons import PersonDetector
 from .personalize import personalise
+from .pose import PoseMetrics
+from .posture_fatigue import PostureBaseline, PostureFatigue
 from .profiles import ProfileStore, FaceID
 from .reason import EventLog, build_reason_card
 from .risk import live_risk_score
 from .tilt import assess_tilt
+
+
+# Mode-switch hysteresis, in ticks at server.TICK_HZ (6 Hz). A face flickers
+# constantly under vibration and glare; without hysteresis the mode would toggle
+# on every dropped frame and the operator would see a strobing banner.
+POSTURE_ENTER_TICKS = 12   # ~2 s of no face before falling back to posture
+POSTURE_EXIT_TICKS = 6     # ~1 s of steady face before handing back
 
 
 class Brain:
@@ -41,6 +50,19 @@ class Brain:
         self.store = store or ProfileStore()
         self.faceid = FaceID(self.store)
         self.fatigue = FatigueEngine(calibration_rows)
+        # The engine this session started with. Restored whenever the active
+        # operator has no personal baseline of their own.
+        self._session_fatigue = self.fatigue
+        self.calibration_source = "session"
+
+        # Posture fallback: used only when the face signal is gone AND pose can
+        # still see somebody in the seat.
+        self.posture = PostureFatigue(None)
+        self.posture_mode = False
+        self.posture_reason = ""
+        self.occlusion_reason = ""
+        self._no_face_ticks = 0
+        self._face_ticks = 0
         self.persons = PersonDetector()
         self.engine = HybridDecisionEngine()
         self.log = event_log or EventLog()
@@ -50,21 +72,126 @@ class Brain:
         # An entry is written ONCE per rising edge (level > _prev_level), not every tick.
         self._prev_level = 0
 
-    def switch_operator(self, operator_id: str) -> dict:
+    def switch_operator(self, operator_id: str, *, source: str = "manual") -> dict:
+        """Make `operator_id` active and re-personalise everything downstream.
+
+        If the operator was enrolled in-cab, their fatigue baseline is already on
+        file — we rebuild the fatigue engine from it and skip calibration
+        entirely.  If they have no stored baseline we fall back to the engine
+        this session started with; we must NOT keep the previous operator's
+        personal baseline, which would silently read the new face against the
+        wrong normal.
+        """
         prof = self.store.switch(operator_id)
         self.engine.reset()
+        self._load_posture_baseline(prof)
+
+        baseline = self.store.baseline_for(operator_id)
+        if baseline:
+            engine = FatigueEngine.from_baseline(baseline)
+            if engine is not None:
+                self.fatigue = engine
+                self.calibration_source = f"enrolment:{operator_id}"
+                print(f"[Brain] {operator_id} ({source}) — personal baseline loaded, "
+                      f"calibration skipped.", flush=True)
+                return prof
+
+        if self.fatigue is not self._session_fatigue:
+            # Coming off someone else's personal baseline — go back to the
+            # session default rather than judging this operator by that one.
+            self.fatigue = self._session_fatigue
+            self.calibration_source = "session"
         self.fatigue.reset()
         return prof
+
+    def _load_posture_baseline(self, profile: dict) -> None:
+        """Load this operator's seated-posture baseline, captured at enrolment.
+
+        Without one, PostureFatigue reports NO SIGNAL rather than guessing: what
+        counts as "slumped" is meaningless without knowing how this particular
+        person sits.
+        """
+        stored = (profile.get("calibration") or {}).get("posture")
+        self.posture = PostureFatigue(PostureBaseline.from_dict(stored or {}))
+        self.posture_mode = False
+        self._no_face_ticks = self._face_ticks = 0
+
+    def switch_to_guest(self, reason: str = "unidentified") -> dict:
+        """Fail-safe profile for an unrecognised operator."""
+        prof = self.store.switch_to_guest()
+        self.engine.reset()
+        self._load_posture_baseline(prof)
+        if self.fatigue is not self._session_fatigue:
+            self.fatigue = self._session_fatigue
+            self.calibration_source = "session"
+        self.fatigue.reset()
+        print(f"[Brain] operator unidentified ({reason}) — conservative profile.",
+              flush=True)
+        return prof
+
+    def _update_mode(self, *, face_ok: bool, pose_present: bool) -> None:
+        """Switch between face and posture fatigue, with hysteresis.
+
+        Entering posture mode needs BOTH a sustained loss of the face AND pose
+        confirming somebody is still sitting there. Without the second condition
+        an empty cab would look identical to an occluded operator, and we would
+        happily score the posture of a seat.
+        """
+        if face_ok:
+            self._face_ticks += 1
+            self._no_face_ticks = 0
+        else:
+            self._no_face_ticks += 1
+            self._face_ticks = 0
+
+        if not self.posture_mode:
+            if self._no_face_ticks >= POSTURE_ENTER_TICKS and pose_present:
+                self.posture_mode = True
+                self.posture.reset()
+                self.posture_reason = (self.occlusion_reason
+                                       or "face not visible — operator still "
+                                          "detected, monitoring posture")
+                print(f"[Brain] posture mode ON ({self.posture_reason})", flush=True)
+        else:
+            if self._face_ticks >= POSTURE_EXIT_TICKS:
+                self.posture_mode = False
+                self.posture_reason = ""
+                print("[Brain] posture mode OFF — face visible again", flush=True)
+            elif not pose_present and self._no_face_ticks >= POSTURE_ENTER_TICKS:
+                # No face and no body: the seat is empty, not occluded.
+                self.posture_mode = False
+                self.posture_reason = "seat appears empty"
 
     def tick(self, signal: dict) -> dict:
         self._tick += 1
         profile = self.faceid.recognise()
 
-        # Q2 — fatigue (real XGBoost model; features from webcam or synthesised).
+        # Q2 — fatigue. Normally the XGBoost model on face features; if the face
+        # is hidden (sunglasses, dust mask) but pose can still see the operator,
+        # posture takes over. Note `raw_feats` is None once the last face window
+        # has expired — live_camera refuses to serve stale features, precisely so
+        # this branch can happen instead of reporting an old reading forever.
         raw_feats = signal.get("features")
-        feat_src = "camera" if raw_feats is not None else "demo-synth"
-        features = raw_feats if raw_feats is not None else synth_window(signal.get("drowsiness", 0.0))
-        fatigue = self.fatigue.update(features)
+        pose: Optional[PoseMetrics] = signal.get("pose")
+        pose_present = bool(pose is not None and pose.present)
+
+        # A face can be present, tracked, and still useless: sunglasses leave the
+        # mesh fitted while EAR and PERCLOS describe eyelids nobody can see. That
+        # is not a face signal, however confident the numbers look.
+        eyes_covered = bool(signal.get("eyes_covered"))
+        self.occlusion_reason = signal.get("occlusion_reason", "") if eyes_covered else ""
+        face_ok = raw_feats is not None and not eyes_covered
+
+        self._update_mode(face_ok=face_ok, pose_present=pose_present)
+
+        if self.posture_mode:
+            feat_src = "posture"
+            features = synth_window(0.0)          # keeps the log shape consistent
+            fatigue = self.posture.update(pose)
+        else:
+            feat_src = "camera" if face_ok else "demo-synth"
+            features = raw_feats if face_ok else synth_window(signal.get("drowsiness", 0.0))
+            fatigue = self.fatigue.update(features)
 
         # ── Warm-up Guard ────────────────────────────────────────────────────
         # Suppress spurious fatigue spikes when the camera trailing buffer is empty.
@@ -112,6 +239,7 @@ class Brain:
             fatigue_p=fatigue["p_at_risk"], zone=zone,
             tilt=tinfo["tilt_angle"], machine_speed=speed,
             is_reversing=reversing, experience=profile.get("experience", "expert"),
+            posture_mode=self.posture_mode,
         )
         level, tier = decision["level"], decision["tier"]
 
@@ -143,8 +271,24 @@ class Brain:
                 "language": profile["language"], "experience": profile["experience"],
             },
             "fatigue": {
-                "p": fatigue["p_at_risk"], "decision": fatigue["decision"],
-                "severity": fatigue["severity"], "backend": self.fatigue.backend,
+                "p": fatigue["p_at_risk"],
+                "p_at_risk": fatigue["p_at_risk"],
+                "decision": fatigue["decision"],
+                "severity": fatigue["severity"],
+                # Which pipeline produced this number. The dashboard must not
+                # render a posture estimate the same way it renders PERCLOS.
+                "source": fatigue.get("source", "face"),
+                "backend": (self.posture.backend if self.posture_mode
+                            else self.fatigue.backend),
+            },
+            "posture": {
+                "mode": self.posture_mode,
+                "reason": self.posture_reason,
+                "eyes_covered": eyes_covered,
+                "present": bool(pose is not None and pose.present),
+                "ready": self.posture.ready,
+                "sigmas": fatigue.get("sigmas", {}),
+                "metrics": pose.as_dict() if pose is not None else None,
             },
             "zone": zone_name,
             "tilt": tinfo,
